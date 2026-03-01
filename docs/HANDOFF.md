@@ -200,74 +200,93 @@ Also exposes `timer_lib.SIM_PERIOD`, `timer_lib.RUN_TIME_SEC`, `timer_lib.FLIGHT
 
 ## Active Development: Landing Quality Enhancement
 
-### Requirements (Agreed)
+### Status: READY TO IMPLEMENT ✅
 
-The next major feature adds landing quality assessment to the scoring system. Requirements were established across multiple conversations:
+Runway coordinates captured in-sim via DataRefEditor on March 1, 2026. Implementation plan agreed. Next session begins coding.
+
+### Requirements (Agreed)
 
 **G-Force Monitoring:**
 - Track peak G-force during the landing roll (from touchdown to full stop)
 - **> 2.5G** = Hard landing → 5% score penalty
 - **> 3.5G** = Crash → Flight disqualified
-- If X-Plane's own crash detection triggers → apply hard landing deduction only (not double-penalize)
+- Crash detection: rely on G threshold only — skip X-Plane native crash dataref hook (X-Plane resets on crash before LANDED phase completes anyway)
 
 **Runway Boundary Checking:**
-- Detect whether the aircraft landed and stopped on the correct runway
+- Detect whether the aircraft touched down on the correct runway
 - Initially targeting **Courchevel (LFLJ) Runway 04** specifically
 - Landing off-runway = disqualification
 - Landing on wrong runway (22 instead of 04) = disqualification with message: "Not designated runway — Please land on Courchevel Rwy 04"
+- Wrong-runway detection method: if touchdown lat/lon is in the upper half of the runway rectangle (closer to Rwy 22 threshold), the aircraft came in on Rwy 22
 
 **Penalty Integration:**
 - Uses percentage-based deductions (consistent with existing scoring philosophy)
 - Formula: `final_score = existing_score × (1 - landing_penalties/100)`
-- Penalties are additive (5% hard landing + other potential penalties)
+- DQ sets `final_score = 0`
 
-### Prerequisite: Runway Coordinates
+### Runway Coordinates (Confirmed)
 
-The implementation is blocked on obtaining precise coordinates for Courchevel Runway 04 from within X-Plane. **This has not been done yet.**
+Captured in-sim via DataRefEditor, March 1, 2026:
 
-**How to capture coordinates:**
+| Point | Latitude | Longitude |
+|-------|----------|-----------|
+| Rwy 04 Threshold (touchdown end, south/lower) | 45.395948 | 6.632793 |
+| Rwy 22 Threshold (stop end, north/upper) | 45.399094 | 6.637169 |
 
-1. Install DataRefEditor plugin (free from https://developer.x-plane.com/tools/datarefeditor/)
-2. Load X-Plane, set departure to LFLJ
-3. Position aircraft at Runway 04 threshold (the downhill end, where you touch down)
-4. Record `sim/flightmodel/position/latitude` and `sim/flightmodel/position/longitude`
-5. Taxi/reposition to the opposite end (Runway 22 threshold / Runway 04 end)
-6. Record those coordinates too
-7. Note runway width (estimate) and confirm heading ≈ 040°
+- Width: **18m** (published figure)
+- Heading: **040°** magnetic (coord-derived bearing ~044° — use calculated bearing in code)
+- Coord-derived length: ~489m (vs 537m published — spawn point inset explains difference)
 
-**Approximate coordinates (need verification in X-Plane):**
-- Rwy 04 Threshold: ~45.3967°N, ~6.6347°E
-- Elevation: ~6,588 ft
-- Runway length: 537 m / 1,762 ft
-- Gradient: 18.5% uphill
+### Implementation Plan (Agreed March 1, 2026)
 
-### Implementation Plan
+**Files to modify: `flytolearn.lua` and `ftl_score.lua` only**
 
-Once coordinates are obtained, the estimated work is 4–8 hours:
+#### Phase 1 — New Constants and Variables (`flytolearn.lua` top section)
+```lua
+-- Runway constants (LFLJ Rwy 04)
+RWY04_LAT, RWY04_LON = 45.395948, 6.632793
+RWY22_LAT, RWY22_LON = 45.399094, 6.637169
+RWY_WIDTH_M = 18
 
-| Phase | Task | Estimate |
-|-------|------|----------|
-| 1 | Runway boundary checking (rectangle from two coordinate pairs + width) | 1–2 hours |
-| 2 | Peak G-force tracking during landing roll | 30 min–1 hour |
-| 3 | Crash/disqualification detection (X-Plane native + G threshold) | 30 min–1 hour |
-| 4 | Landing penalty calculations integrated with existing score | 30 min–1 hour |
-| 5 | Score screen updates to display landing quality info | 30 min–1 hour |
-| 6 | Testing and refinement | 1–2 hours |
-
-### New Functions Needed
-
-```
-is_within_runway(lat, lon)          → bool (is position inside Rwy 04 rectangle?)
-calculate_landing_penalties()       → number (percentage deduction)
-check_disqualification()            → bool (should flight be DQ'd?)
+-- New landing quality tracking variables
+peak_gforce = 0
+touchdown_lat, touchdown_lon = 0, 0
+landing_dq = false
+landing_dq_reason = ""
+landing_penalty_pct = 0
 ```
 
-### State Machine Changes
+#### Phase 2 — Three New Functions (`flytolearn.lua`)
 
-The `LANDED` phase needs to be enhanced to:
-1. Capture peak G-force (not just instantaneous G at first ground contact)
-2. Continuously track G during the landing roll until stopped
-3. Check final position against runway boundaries when transitioning to `ENDED`
+**`is_within_runway(lat, lon)`**
+- Rotated rectangle check using the two threshold coordinate pairs
+- Algorithm: convert to metres, project along/perpendicular to centerline, check both bounds
+- Also used to detect wrong-runway landing: touchdown in upper half (along > rwy_length/2) = Rwy 22
+
+**`calculate_landing_penalties()`**
+- Returns percentage deduction
+- peak_gforce > 2.5 → +5%
+- Returns 0 if no penalties
+
+**`check_disqualification()`**
+- Returns `dq (bool), reason (string)`
+- peak_gforce > 3.5 → DQ, "Crash landing detected"
+- not is_within_runway(touchdown_lat, touchdown_lon) → DQ, "Landed off runway"
+- touchdown in upper half → DQ, "Not designated runway — Please land on Courchevel Rwy 04"
+
+#### Phase 3 — State Machine Changes (`update()`)
+
+- **INFLIGHT→LANDED transition:** capture `touchdown_lat/lon`, initialise `peak_gforce` with current G reading. Remove `write_flight_info()` call (moved to ENDED).
+- **During LANDED (every frame):** `if get(xp_gforce) > peak_gforce then peak_gforce = get(xp_gforce) end`
+- **LANDED→ENDED transition:** call `check_disqualification()`, call `calculate_landing_penalties()`, apply to `final_score`, update `flight_summary`, call `write_flight_info()`, show score popup.
+
+#### Phase 4 — Log File Additions (`write_flight_info()`)
+New `flight_summary` fields and log lines:
+- `peak_gforce`, `landing_penalty_pct`, `landing_dq`, `landing_dq_reason`, `base_score`
+
+#### Phase 5 — Score Screen (`ftl_score.lua`)
+- Add one landing quality line between fuel and score
+- Three states: Clean / Hard landing (-5%) / DISQUALIFIED + reason
 
 ### Future Expansion
 
@@ -368,7 +387,24 @@ This session established the GitHub repository and copied all source files from 
 - No code changes — landing quality enhancement still blocked on runway coordinates
 - `flight_start.lua` and `ftl_status.lua` need to be reviewed and documented
 
+---
+
+## Session: March 1, 2026 — Runway Coordinates + Implementation Planning (Claude Code)
+
+**What was done:**
+- Installed DataRefEditor in X-Plane 12
+- Captured LFLJ Rwy 04 and Rwy 22 threshold coordinates in-sim — landing quality feature is now unblocked
+- Validated coordinates: distance ~489m (vs 537m published — spawn point inset), bearing ~044° (vs 040° magnetic — acceptable)
+- Confirmed runway width: 18m (published figure)
+- Agreed full implementation plan for landing quality enhancement (see Active Development section above)
+- Updated HANDOFF.md, MEMORY.md, README.md, and `docs/lflj_runway_coordinates.csv` with confirmed data
+
+**What was NOT done:**
+- No code written yet — implementation approved, begins next session
+- `ui_assets/` folder still not in repo
+- `flight_start.lua` and `ftl_status.lua` still not reviewed
+
 **Next steps:**
-- Use **Claude Code** (not Cowork) for all future coding sessions
-- Install DataRefEditor in X-Plane and capture Courchevel Runway 04 coordinates to unblock landing quality feature
+- Implement landing quality enhancement (`flytolearn.lua` + `ftl_score.lua`)
 - Copy `ui_assets/` into repo and commit
+- Review `flight_start.lua` and `ftl_status.lua`
