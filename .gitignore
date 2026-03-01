@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# X-Plane / SASL runtime files
+data/modules/Custom Module/flytolearn_config.ini
+data/output/SASLLog.txt
+data/modules/state.txt
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
