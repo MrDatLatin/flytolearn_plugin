@@ -40,59 +40,45 @@ Each completed flight writes a `.info` file to the X-Plane root directory with r
 
 ---
 
+## Repository
+
+**GitHub:** https://github.com/MrDatLatin/flytolearn_plugin
+
 ## Repository Structure
 
 ```
 flytolearn_plugin/
 ├── data/
 │   └── modules/
-│       ├── main.lua                  # Entry point, config, component loading
-│       ├── flytolearn.lua            # Core scoring logic & state machine
-│       ├── timer_library.lua         # xLua-style timer functions for SASL
-│       ├── Custom Module/
-│       │   ├── ftl_logo.lua          # ⚠️ NOT YET IN REPO — Logo bar component
-│       │   ├── ftl_start.lua         # ⚠️ NOT YET IN REPO — Start screen UI
-│       │   ├── ftl_options.lua       # ⚠️ NOT YET IN REPO — Options/weights UI
-│       │   ├── ftl_reboot.lua        # ⚠️ NOT YET IN REPO — Screen change handler
-│       │   ├── ftl_score.lua         # ⚠️ NOT YET IN REPO — Score display UI
-│       │   ├── ftl_inflight.lua      # ⚠️ NOT YET IN REPO — Inflight status UI
-│       │   ├── keyboard_handler.lua  # ⚠️ NOT YET IN REPO — Input handling
-│       │   └── ui_button.lua         # ⚠️ NOT YET IN REPO — Reusable button component
+│       ├── main.lua                      # Entry point, config, component loading
 │       └── Custom Module/
-│           └── flytolearn_config.ini # Runtime config (auto-generated)
+│           ├── flytolearn.lua            # Core scoring logic & state machine
+│           ├── timer_library.lua         # xLua-style timer functions for SASL
+│           ├── ftl_logo.lua              # Logo bar component
+│           ├── ftl_start.lua             # Start screen UI
+│           ├── ftl_options.lua           # Options/weights UI
+│           ├── ftl_reboot.lua            # Screen change handler
+│           ├── ftl_score.lua             # Score display UI
+│           ├── ftl_inflight.lua          # Inflight status UI
+│           ├── ftl_status.lua            # Status display
+│           ├── flight_start.lua          # Flight start handler
+│           ├── keyboard_handler.lua      # Input handling
+│           ├── ui_button.lua             # Reusable button component
+│           └── ui_assets/                # ⚠️ NOT YET IN REPO — PNG images & fonts
 ├── docs/
-│   ├── HANDOFF.md                    # Full project context & design decisions
-│   └── xplane-developer-documentation-reference.md
-├── CLAUDE.md                         # Claude Code project memory
-├── README.md                         # This file
-├── CHANGELOG.md                      # Version history
-└── LICENSE                           # MIT License
+│   └── HANDOFF.md                        # Full project context & design decisions
+├── CLAUDE.md                             # Claude Code project memory
+├── README.md                             # This file
+└── LICENSE                               # MIT License
 ```
 
-### ⚠️ Missing Files
+### ⚠️ Still Needed
 
-The following UI component files are referenced by `main.lua` and `flytolearn.lua` but have **not yet been added to the repository**. They must be copied from the working X-Plane installation:
+The `ui_assets/` folder containing PNG button images and the RobotoCondensed font has not yet been copied into the repo. Source location:
 
-**Source location on disk:**
 ```
-X-Plane 12/Resources/plugins/FlyToLearn/data/modules/Custom Module/
+X-Plane 12/Resources/plugins/FlyToLearn/data/modules/Custom Module/ui_assets/
 ```
-
-Files needed:
-- `ftl_logo.lua` — Logo/status bar drawn at bottom of X-Plane screen
-- `ftl_start.lua` — Start screen with departure airport detection
-- `ftl_options.lua` — Scoring weight adjustment UI
-- `ftl_reboot.lua` — Screen resolution change handler
-- `ftl_score.lua` — Final score display
-- `ftl_inflight.lua` — In-flight status display
-- `keyboard_handler.lua` — Keyboard input handling
-- `ui_button.lua` — Reusable button drawing component
-
-Also needed (image assets):
-- `defdecore.png` — Window decoration texture
-- `interactive.png` — Interactive element texture
-- `cursors.png` — Cursor textures
-- Any FTL logo/branding images used by `ftl_logo.lua`
 
 ---
 

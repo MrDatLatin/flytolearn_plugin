@@ -30,16 +30,34 @@ This file provides context for Claude Code (or any Claude instance) working on t
 - All settings live in the global `settings` table. The global `config` table is the serializable copy written to disk on shutdown.
 - Airport detection uses `findNavAid(nil, nil, lat, lon, nil, NAV_AIRPORT)` — finds nearest airport to given coordinates.
 
+## Repository
+
+- **GitHub:** https://github.com/MrDatLatin/flytolearn_plugin
+- **Branch:** `main`
+- **Local path (Mac):** `~/Documents/GitHub/flytolearn_plugin`
+
 ## File Map
 
 ### Core files (in repo)
-- `main.lua` — Entry point, global settings, config load/save, component registration
-- `flytolearn.lua` — State machine, scoring logic, UI window creation, flight summary logging
-- `timer_library.lua` — xLua-style timer functions adapted for SASL (MIT, by Jeffory J. Beckers)
+- `data/modules/main.lua` — Entry point, global settings, config load/save, component registration
+- `data/modules/Custom Module/flytolearn.lua` — State machine, scoring logic, UI window creation, flight summary logging
+- `data/modules/Custom Module/timer_library.lua` — xLua-style timer functions adapted for SASL (MIT, by Jeffory J. Beckers)
 
-### UI components (⚠️ NOT YET IN REPO — must be copied from X-Plane installation)
-- `ftl_logo.lua`, `ftl_start.lua`, `ftl_options.lua`, `ftl_reboot.lua`, `ftl_score.lua`, `ftl_inflight.lua`, `keyboard_handler.lua`, `ui_button.lua`
-- Source: `X-Plane 12/Resources/plugins/FlyToLearn/data/modules/Custom Module/`
+### UI components (all now in repo ✅)
+Located in `data/modules/Custom Module/`:
+- `ftl_logo.lua` — Logo bar at bottom of screen
+- `ftl_start.lua` — Start/departure screen
+- `ftl_options.lua` — Scoring weight adjustment UI
+- `ftl_reboot.lua` — Screen resolution change handler
+- `ftl_score.lua` — Score display screen
+- `ftl_inflight.lua` — In-flight status overlay
+- `ftl_status.lua` — Status display (discovered in X-Plane install — not in original docs)
+- `flight_start.lua` — Flight start handler (discovered in X-Plane install — not in original docs)
+- `keyboard_handler.lua` — Keyboard input handling
+- `ui_button.lua` — Reusable button drawing component
+
+### UI assets (NOT YET in repo)
+Image assets in `Custom Module/ui_assets/` exist in the X-Plane installation but have not been copied to the repo yet. These include button state PNGs and a custom font (RobotoCondensed-Regular.ttf).
 
 ### Reference files (read-only, don't modify)
 - `api.lua` — SASL API annotations (109K, useful for autocomplete)
@@ -147,7 +165,7 @@ check_disqualification()            -- bool: DQ conditions met?
 2. Typo: `flight_summary.score_wieght_time` (should be `weight`)
 3. Many globals that should be locals (`flight_phase`, `start_time`, etc.)
 4. Debug mode (`LOG_DEBUG`) left active in `main.lua` — switch to `LOG_INFO` for distribution
-5. 8 UI component files + image assets not yet added to repo
+5. UI image assets (`ui_assets/` folder with PNGs and font) not yet added to repo — copy from `X-Plane 12/Resources/plugins/FlyToLearn/data/modules/Custom Module/ui_assets/`
 
 ## Coding Conventions
 

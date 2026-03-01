@@ -2,8 +2,8 @@
 
 This document captures the complete project context, architecture decisions, active work items, and institutional knowledge accumulated during development. It is intended for any developer (human or AI assistant) who needs to understand or continue work on this plugin.
 
-**Last updated:** December 2024  
-**Author:** Tom  
+**Last updated:** March 1, 2026
+**Author:** Tom
 **Current version:** 1.1.3
 
 ---
@@ -40,23 +40,26 @@ SASL is a Lua scripting layer that sits between X-Plane and plugin code. Key con
 ```
 X-Plane 12/Resources/plugins/FlyToLearn/
 ├── lin_x64/          # Linux SASL binary
-├── mac_x64/          # macOS SASL binary  
+├── mac_x64/          # macOS SASL binary
 ├── win_x64/          # Windows SASL binary
 └── data/
     └── modules/
         ├── main.lua              # Entry point
-        ├── flytolearn.lua        # Core logic (loaded as component by SASL)
-        ├── timer_library.lua     # Timer utilities (loaded first)
         └── Custom Module/
-            ├── ftl_logo.lua      # Logo bar at bottom of screen
-            ├── ftl_start.lua     # Start/departure screen
-            ├── ftl_options.lua   # Weight configuration UI
-            ├── ftl_reboot.lua    # Screen resolution change handler
-            ├── ftl_score.lua     # Score display screen
-            ├── ftl_inflight.lua  # In-flight status overlay
+            ├── flytolearn.lua        # Core logic & state machine
+            ├── timer_library.lua     # Timer utilities (loaded first)
+            ├── ftl_logo.lua          # Logo bar at bottom of screen
+            ├── ftl_start.lua         # Start/departure screen
+            ├── ftl_options.lua       # Weight configuration UI
+            ├── ftl_reboot.lua        # Screen resolution change handler
+            ├── ftl_score.lua         # Score display screen
+            ├── ftl_inflight.lua      # In-flight status overlay
+            ├── ftl_status.lua        # Status display (found in install, not in original docs)
+            ├── flight_start.lua      # Flight start handler (found in install, not in original docs)
             ├── keyboard_handler.lua  # Keyboard input
-            ├── ui_button.lua     # Reusable button drawing
-            └── flytolearn_config.ini # Persisted settings
+            ├── ui_button.lua         # Reusable button drawing
+            ├── flytolearn_config.ini # Persisted settings (auto-generated, not in repo)
+            └── ui_assets/            # Image assets and fonts (not yet in repo)
 ```
 
 ### Component Loading Chain
@@ -304,7 +307,7 @@ The plugin should enforce proper procedures by disqualifying any landing attempt
 
 3. **Global variable usage** — Many variables that could be local are global (`flight_phase`, `start_time`, etc.). Works fine in SASL's sandboxed environment but is not best practice.
 
-4. **Missing UI files in repo** — 8 Lua files and image assets need to be copied from the working installation. See README for the full list.
+4. **Missing UI assets** — The `ui_assets/` folder (PNG button images and RobotoCondensed-Regular.ttf font) has not yet been copied into the repo. All Lua source files are now present. Copy from: `X-Plane 12/Resources/plugins/FlyToLearn/data/modules/Custom Module/ui_assets/`
 
 5. **Sim speed forcing** — Uses three datarefs to force 1x speed. The `xp_gnd_speed1` and `xp_gnd_speed2` datarefs may not be the ideal approach — needs investigation if any side effects exist.
 
@@ -343,3 +346,29 @@ Development context was established across four Claude conversations in December
 3. **"Contact information review"** (Dec 29) — Confirmed flight plan (LFHU→LFLJ), validated Runway 04 is correct for landing, discussed DataRefEditor installation, estimated 4-8 hours for implementation.
 
 4. **"Taking screenshots in X-Plane"** (Dec 30) — Discussed situation file saving for reusable training setups, identified LOWS as potential default airport, clarified X-Plane 12 scenery installation process.
+
+---
+
+## Session: March 1, 2026 — GitHub Repo Setup (Claude Cowork)
+
+This session established the GitHub repository and copied all source files from the X-Plane installation into the repo. No code was written or modified.
+
+**What was done:**
+- Created the `flytolearn_plugin` repo directory structure on disk
+- Reviewed the actual X-Plane installation and discovered two files not previously documented: `flight_start.lua` and `ftl_status.lua`
+- Copied all Lua source files from the X-Plane installation into the repo
+- Initialized git repo with `main` branch
+- Created `.gitignore` (excludes `.DS_Store`, `flytolearn_config.ini`, SASL logs, editor files)
+- Made initial commit (18 files, 2,255 lines)
+- Pushed to GitHub: https://github.com/MrDatLatin/flytolearn_plugin
+- Set up git credential storage on Mac for future pushes
+
+**What was NOT done (still outstanding):**
+- `ui_assets/` folder (PNG images + font) not yet copied to repo
+- No code changes — landing quality enhancement still blocked on runway coordinates
+- `flight_start.lua` and `ftl_status.lua` need to be reviewed and documented
+
+**Next steps:**
+- Use **Claude Code** (not Cowork) for all future coding sessions
+- Install DataRefEditor in X-Plane and capture Courchevel Runway 04 coordinates to unblock landing quality feature
+- Copy `ui_assets/` into repo and commit
