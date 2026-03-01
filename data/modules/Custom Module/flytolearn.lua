@@ -26,6 +26,19 @@ end_time, end_fuel, end_dist, final_score = 0,0,0,0
 calc_dist, calc_load, calc_fuel, calc_time = 0,0,0,0
 weighted_dist, weighted_load, weighted_fuel, weighted_time = 0,0,0,0
 
+-- Runway constants (LFLJ Rwy 04, captured in-sim 2026-03-01)
+RWY04_LAT, RWY04_LON = 45.395948, 6.632793
+RWY22_LAT, RWY22_LON = 45.399094, 6.637169
+RWY_WIDTH_M = 18
+
+-- Landing quality tracking
+peak_gforce = 0
+base_score = 0
+touchdown_lat, touchdown_lon = 0, 0
+landing_dq = false
+landing_dq_reason = ""
+landing_penalty_pct = 0
+
 
 
 -- constants: flight phase
@@ -74,6 +87,60 @@ function findAirport(lat, long)
     local id = findNavAid (nil, nil, lat, long, nil, NAV_AIRPORT)
     return id, getNavAidInfo ( id )
     
+end
+
+function is_within_runway(lat, lon)
+    -- Approximate metre-per-degree conversions at LFLJ latitude
+    local LAT_M_PER_DEG = 111320
+    local LON_M_PER_DEG = 111320 * math.cos(math.rad((RWY04_LAT + RWY22_LAT) / 2))
+
+    -- Vector from Rwy04 threshold to test point (metres)
+    local north = (lat - RWY04_LAT) * LAT_M_PER_DEG
+    local east  = (lon - RWY04_LON) * LON_M_PER_DEG
+
+    -- Runway direction vector (Rwy04 → Rwy22, metres)
+    local rwy_north  = (RWY22_LAT - RWY04_LAT) * LAT_M_PER_DEG
+    local rwy_east   = (RWY22_LON - RWY04_LON) * LON_M_PER_DEG
+    local rwy_length = math.sqrt(rwy_north^2 + rwy_east^2)
+
+    -- Unit vector along runway centreline
+    local unit_north = rwy_north / rwy_length
+    local unit_east  = rwy_east  / rwy_length
+
+    -- Longitudinal (along) and lateral (perp) projections
+    local along = north * unit_north + east * unit_east
+    local perp  = math.abs(-north * unit_east + east * unit_north)
+
+    local half_width    = (RWY_WIDTH_M / 2) + 5      -- 5m lateral buffer
+    local within_length = (along >= -10) and (along <= rwy_length + 10)  -- 10m end buffers
+    local within_width  = perp <= half_width
+
+    return (within_length and within_width), along, rwy_length
+end
+
+function calculate_landing_penalties()
+    local penalty = 0
+    if peak_gforce > 2.5 then
+        penalty = penalty + 5
+    end
+    return penalty
+end
+
+function check_disqualification()
+    -- Crash threshold
+    if peak_gforce > 3.5 then
+        return true, "Crash landing detected"
+    end
+    -- Runway boundary and direction check
+    local on_runway, along, rwy_length = is_within_runway(touchdown_lat, touchdown_lon)
+    if not on_runway then
+        return true, "Landed off runway"
+    end
+    -- Wrong runway: touchdown in upper half means came in on Rwy 22
+    if along > (rwy_length / 2) then
+        return true, "Not designated runway - Please land on Courchevel Rwy 04"
+    end
+    return false, ""
 end
 
 function settings.ftl_logo.doMouseEnter(button_name)
@@ -129,10 +196,17 @@ function settings.ftl_logo.doMouseUp (button, parentX, parentY, button_name, cid
         settings.fuel_weight = 1.0
         settings.time_weight = 1.0
     elseif button_name == "start" then
-        c.start_airport.id, c.start_airport.type , c.start_airport.arptLat , c.start_airport.arptLon , c.start_airport.height , c.start_airport.freq , c.start_airport.heading , 
+        c.start_airport.id, c.start_airport.type , c.start_airport.arptLat , c.start_airport.arptLon , c.start_airport.height , c.start_airport.freq , c.start_airport.heading ,
         c.start_airport.icao , c.start_airport.name , c.start_airport.inCurDSF = findAirport(get(xp_lat), get(xp_lon))
         flight_phase = FTL_PHASE_DEPARTING
         start_popup:setIsVisible(false)
+        -- Reset landing quality state for new flight
+        peak_gforce = 0
+        base_score = 0
+        touchdown_lat, touchdown_lon = 0, 0
+        landing_dq = false
+        landing_dq_reason = ""
+        landing_penalty_pct = 0
     elseif button_name == "quit" then
         start_popup:setIsVisible(false)
     elseif button_name == "flight_config" then
@@ -432,6 +506,13 @@ function write_flight_info ()
     table.insert(tLines, "Fuel Consumed: " .. flight_summary.flight_fuel)
     table.insert(tLines, "Landing Force: " .. flight_summary.landing_force)
     table.insert(tLines, "Landing Rate: " .. flight_summary.vert_speed)
+    table.insert(tLines, "Peak Landing G-Force: " .. flight_summary.peak_gforce)
+    table.insert(tLines, "Landing Penalty: " .. flight_summary.landing_penalty)
+    table.insert(tLines, "Disqualified: " .. flight_summary.landing_dq)
+    if flight_summary.landing_dq == "true" then
+        table.insert(tLines, "DQ Reason: " .. flight_summary.landing_dq_reason)
+    end
+    table.insert(tLines, "Base Score: " .. flight_summary.base_score)
     table.insert(tLines, "Score weight (distance): " .. flight_summary.score_weight_distance)
     table.insert(tLines, "Score weight (payload): " .. flight_summary.score_weight_payload)
     table.insert(tLines, "Score weight (time): " .. flight_summary.score_wieght_time)
@@ -479,6 +560,10 @@ function update ()
     if flight_phase == FTL_PHASE_INFLIGHT then
         force_sim_speed_to_one ()
     end
+    if flight_phase == FTL_PHASE_LANDED then
+        local current_g = get(xp_gforce)
+        if current_g > peak_gforce then peak_gforce = current_g end
+    end
     if flight_phase == FTL_PHASE_DEPARTING then
         force_sim_speed_to_one ()
         if not on_ground then
@@ -492,6 +577,9 @@ function update ()
     elseif flight_phase == FTL_PHASE_INFLIGHT and on_ground then
         if xptime - start_time >= (settings.min_flight_length * 60) then -- JJB 2024-03-23: added min flight length
             flight_phase = FTL_PHASE_LANDED
+            touchdown_lat = get(xp_lat)
+            touchdown_lon = get(xp_lon)
+            peak_gforce   = get(xp_gforce)
             end_time = xptime - start_time
             end_fuel = start_fuel - xpfuel
             end_dist = xpdist - start_dist
@@ -527,11 +615,28 @@ function update ()
             flight_summary.score_wieght_time = string.format ("%.1f", settings.time_weight)
             flight_summary.score_weight_fuel = string.format ("%.1f", settings.fuel_weight)
             flight_summary.final_score = string.format ("%.2f", final_score) .. " points"
-            write_flight_info ()
+            -- write_flight_info() moved to LANDED→ENDED so peak G and penalties are included
         else  -- JJB 2024-03-23: added min flight length
             flight_phase = FTL_PHASE_DEPARTING -- JJB 2024-03-23: added min flight length
         end -- JJB 2024-03-23: added min flight length
     elseif flight_phase == FTL_PHASE_LANDED and get(xp_ground_speed) <= 0.01 then
+        -- Apply landing quality checks
+        landing_dq, landing_dq_reason = check_disqualification()
+        landing_penalty_pct = calculate_landing_penalties()
+        base_score = final_score
+        if landing_dq then
+            final_score = 0
+        elseif landing_penalty_pct > 0 then
+            final_score = final_score * (1 - landing_penalty_pct / 100)
+        end
+        -- Update flight summary with landing quality and write log
+        flight_summary.peak_gforce       = string.format("%.4f", peak_gforce) .. " G"
+        flight_summary.landing_penalty   = landing_penalty_pct .. "%"
+        flight_summary.landing_dq        = tostring(landing_dq)
+        flight_summary.landing_dq_reason = landing_dq_reason
+        flight_summary.base_score        = string.format("%.2f", base_score) .. " points"
+        flight_summary.final_score       = string.format("%.2f", final_score) .. " points"
+        write_flight_info()
         flight_phase = FTL_PHASE_ENDED
         score_popup:setIsVisible(true)
     end
