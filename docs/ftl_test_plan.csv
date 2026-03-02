@@ -1,0 +1,7 @@
+#,Test,How,Expected Result,Pass/Fail,Notes
+1,Clean landing,"Spawn at LFLJ Rwy 22 end, take off downhill, quick circuit, land gently on Rwy 04","Landing: Clean in white, full score",,
+2,Hard landing,"Same circuit, grease the threshold then yank the nose down firmly on touchdown","Landing: Hard landing (-5%) in yellow",,
+3,Crash / DQ by G,Really slam it in,"DISQUALIFIED — Crash landing detected in red",,
+4,Wrong runway,"Land coming from the northeast, touching down near the Rwy 22 end (upper half)","DISQUALIFIED — Not designated runway… in red",,
+5,Off-runway,Land in the grass next to the runway,"DISQUALIFIED — Landed off runway in red",,
+6,Log file,"After any successful flight, find flytolearn_summary_*.info in X-Plane root folder","File has Peak G, Landing Penalty, Disqualified, Base Score lines",,

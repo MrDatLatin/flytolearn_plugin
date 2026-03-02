@@ -195,17 +195,17 @@ sasl.setLogLevel(LOG_DEBUG)   -- development (current)
 
 See [HANDOFF.md](docs/HANDOFF.md) for full implementation details.
 
-### In Progress: Landing Quality Enhancement
-Runway coordinates confirmed. Implementation plan agreed. Coding begins next session.
+### Implemented — Pending Test: Landing Quality Enhancement
+Coded March 1, 2026. Deployed to X-Plane. Commit `3185df0`. Version bump to **1.2.0** after successful test.
 
-- **G-force monitoring** — Peak G tracked across full landing roll (not just touchdown instant)
+- **G-force monitoring** ✅ — Peak G tracked across full landing roll (not just touchdown instant)
   - > 2.5G = 5% score penalty (hard landing)
   - > 3.5G = flight disqualified (crash)
-- **Runway boundary detection** — Rotated rectangle check against confirmed LFLJ Rwy 04 coordinates
+- **Runway boundary detection** ✅ — Rotated rectangle check against confirmed LFLJ Rwy 04 coordinates
   - Off-runway landing = disqualification
   - Landing on wrong runway (Rwy 22) = disqualification with specific message
-- **Score integration** — Percentage-based deductions applied after base score calculation
-- **Score screen updates** — Landing quality line added to final score display
+- **Score integration** ✅ — Percentage-based deductions applied after base score calculation
+- **Score screen updates** ✅ — Landing quality line added to final score display
 
 ### Future
 - Extend runway detection to any runway (not just hardcoded Courchevel)

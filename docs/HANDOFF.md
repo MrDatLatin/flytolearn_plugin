@@ -200,9 +200,9 @@ Also exposes `timer_lib.SIM_PERIOD`, `timer_lib.RUN_TIME_SEC`, `timer_lib.FLIGHT
 
 ## Active Development: Landing Quality Enhancement
 
-### Status: READY TO IMPLEMENT ✅
+### Status: IMPLEMENTED — PENDING IN-SIM TEST ✅🔧
 
-Runway coordinates captured in-sim via DataRefEditor on March 1, 2026. Implementation plan agreed. Next session begins coding.
+Landing quality enhancement coded and deployed to X-Plane installation on March 1, 2026. Code committed and pushed to GitHub (commit 3185df0). Backup copies of pre-enhancement files saved as `flytolearn.lua.bak` and `ftl_score.lua.bak` in the X-Plane plugin folder.
 
 ### Requirements (Agreed)
 
@@ -404,7 +404,38 @@ This session established the GitHub repository and copied all source files from 
 - `ui_assets/` folder still not in repo
 - `flight_start.lua` and `ftl_status.lua` still not reviewed
 
-**Next steps:**
-- Implement landing quality enhancement (`flytolearn.lua` + `ftl_score.lua`)
+**Next steps (after this session):**
+- Test landing quality enhancement in X-Plane (see test plan below)
+- Bump version to 1.2.0 after successful test
 - Copy `ui_assets/` into repo and commit
 - Review `flight_start.lua` and `ftl_status.lua`
+
+---
+
+## Session: March 1, 2026 — Landing Quality Implementation (Claude Code, continued)
+
+**What was done:**
+- Implemented all 5 phases of the landing quality enhancement plan in `flytolearn.lua` and `ftl_score.lua`
+- Committed to GitHub: commit `3185df0` — "Add landing quality enhancement to scoring system"
+- Pushed to GitHub: https://github.com/MrDatLatin/flytolearn_plugin
+- Backed up pre-enhancement plugin files in X-Plane as `flytolearn.lua.bak` and `ftl_score.lua.bak`
+- Copied updated `flytolearn.lua` (25,938 bytes) and `ftl_score.lua` (3,999 bytes) to X-Plane installation
+
+**What was NOT done:**
+- Not yet tested in X-Plane — version remains at 1.1.3 until test passes
+- `ui_assets/` still not in repo
+- `flight_start.lua` and `ftl_status.lua` still not reviewed
+
+**Test plan:**
+
+| # | Test | How | Expected Result |
+|---|------|-----|-----------------|
+| 1 | Clean landing | Spawn at LFLJ Rwy 22 end, take off downhill, quick circuit, land gently on Rwy 04 | "Landing: Clean" in white, full score |
+| 2 | Hard landing | Same circuit, grease the threshold then yank the nose down firmly on touchdown | "Landing: Hard landing (-5%)" in yellow |
+| 3 | Crash / DQ by G | Really slam it in | "DISQUALIFIED — Crash landing detected" in red |
+| 4 | Wrong runway | Land coming from the northeast, touching down near the Rwy 22 end (upper half) | "DISQUALIFIED — Not designated runway…" in red |
+| 5 | Off-runway | Land in the grass next to the runway | "DISQUALIFIED — Landed off runway" in red |
+| 6 | Log file | After any successful flight, find `flytolearn_summary_*.info` in X-Plane root folder | Check it has Peak G, Landing Penalty, Disqualified, Base Score lines |
+
+**To speed up testing:** `min_flight_length` is currently set to `0.1` in `flytolearn_config.ini` — allows scoring after ~6 seconds airborne.
+**⚠️ Reset to `2` when testing is complete** (edit `flytolearn_config.ini` line 9, or change it via the Options screen in-sim).
