@@ -64,25 +64,21 @@ flytolearn_plugin/
 │           ├── flight_start.lua          # Flight start handler
 │           ├── keyboard_handler.lua      # Input handling
 │           ├── ui_button.lua             # Reusable button component
-│           └── ui_assets/                # ⚠️ NOT YET IN REPO — PNG images & fonts
+│           └── ui_assets/                # PNG button images & RobotoCondensed font
 ├── docs/
-│   └── HANDOFF.md                        # Full project context & design decisions
+│   ├── HANDOFF.md                        # Full project context & design decisions
+│   ├── ftl_test_plan.csv                 # 6-scenario landing quality test plan
+│   └── lflj_runway_coordinates.csv       # Confirmed in-sim runway coordinates
 ├── CLAUDE.md                             # Claude Code project memory
 ├── README.md                             # This file
 └── LICENSE                               # MIT License
 ```
 
-### ⚠️ Still Needed
-
-The `ui_assets/` folder containing PNG button images and the RobotoCondensed font has not yet been copied into the repo. Source location:
-
-```
-X-Plane 12/Resources/plugins/FlyToLearn/data/modules/Custom Module/ui_assets/
-```
-
 ---
 
 ## Installation
+
+> **For testers:** Download `FlyToLearn_v1.1.3_test.zip`, unzip it, and copy the `FlyToLearn/` folder to your plugins directory. Works on Mac, Windows, and Linux.
 
 1. Copy the `FlyToLearn/` folder to `X-Plane 12/Resources/plugins/`
 2. The folder structure inside X-Plane should be:

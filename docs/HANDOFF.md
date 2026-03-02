@@ -423,8 +423,12 @@ This session established the GitHub repository and copied all source files from 
 
 **What was NOT done:**
 - Not yet tested in X-Plane — version remains at 1.1.3 until test passes
-- `ui_assets/` still not in repo
 - `flight_start.lua` and `ftl_status.lua` still not reviewed
+
+**Also completed this session:**
+- Copied all 47 `ui_assets/` files (PNGs + RobotoCondensed-Regular.ttf) into repo — commit `b6c4dac`
+- Created `docs/ftl_test_plan.csv` with 6-scenario test plan for team distribution
+- Created `FlyToLearn_v1.1.3_test.zip` on Desktop (16 MB) — cross-platform (Mac/Win/Linux), excludes `.bak` files and `flytolearn_config.ini` so testers get clean defaults on first run
 
 **Test plan:**
 
