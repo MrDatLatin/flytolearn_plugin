@@ -26,9 +26,11 @@ end_time, end_fuel, end_dist, final_score = 0,0,0,0
 calc_dist, calc_load, calc_fuel, calc_time = 0,0,0,0
 weighted_dist, weighted_load, weighted_fuel, weighted_time = 0,0,0,0
 
--- Runway constants (LFLJ Rwy 04, captured in-sim 2026-03-01)
-RWY04_LAT, RWY04_LON = 45.395948, 6.632793
-RWY22_LAT, RWY22_LON = 45.399094, 6.637169
+-- TEMPORARY TEST — KRNT Rwy 16/34 (revert to LFLJ values after testing)
+-- RWY04_LAT, RWY04_LON = 45.395948, 6.632793  -- LFLJ Rwy 04 threshold (touchdown end, south/lower)
+-- RWY22_LAT, RWY22_LON = 45.399094, 6.637169  -- LFLJ Rwy 22 threshold (stop end, north/upper)
+RWY04_LAT, RWY04_LON = 47.500260, 122.216821   -- KRNT Rwy 16 threshold (touchdown end, north)
+RWY22_LAT, RWY22_LON = 47.485983, 122.214876   -- KRNT Rwy 34 threshold (stop end, south)
 RWY_WIDTH_M = 18
 
 -- Landing quality tracking
@@ -74,7 +76,7 @@ xp_ground_speed = globalPropertyf ("sim/flightmodel2/position/groundspeed")
 xp_on_ground = globalPropertyi ("sim/flightmodel/failures/onground_all")
 xp_sim_speed = globalPropertyi ("sim/time/sim_speed")
 xp_gnd_speed1 = globalPropertyi ("sim/time/ground_speed")
-xp_gnd_speed2 = globalPropertyi ("sim/time/ground_speed_flt")
+xp_gnd_speed2 = globalPropertyf ("sim/time/ground_speed_flt")
 xp_gforce = globalPropertyf ("sim/flightmodel/forces/g_nrml")
 xp_vs_fpm = globalPropertyf ("sim/flightmodel/position/vh_ind_fpm")
 
@@ -138,7 +140,7 @@ function check_disqualification()
     end
     -- Wrong runway: touchdown in upper half means came in on Rwy 22
     if along > (rwy_length / 2) then
-        return true, "Not designated runway - Please land on Courchevel Rwy 04"
+        return true, "Not designated runway - Please land on KRNT Rwy 16"  -- TEMP: revert to 'Courchevel Rwy 04' with LFLJ coordinates
     end
     return false, ""
 end
@@ -515,7 +517,7 @@ function write_flight_info ()
     table.insert(tLines, "Base Score: " .. flight_summary.base_score)
     table.insert(tLines, "Score weight (distance): " .. flight_summary.score_weight_distance)
     table.insert(tLines, "Score weight (payload): " .. flight_summary.score_weight_payload)
-    table.insert(tLines, "Score weight (time): " .. flight_summary.score_wieght_time)
+    table.insert(tLines, "Score weight (time): " .. flight_summary.score_weight_time)
     table.insert(tLines, "Score weight (fuel): " .. flight_summary.score_weight_fuel)
     table.insert(tLines, "Final Score: " .. flight_summary.final_score)
 
@@ -612,7 +614,7 @@ function update ()
             flight_summary.vert_speed = string.format ("%.4f", get (xp_vs_fpm)) .. " fpm"
             flight_summary.score_weight_distance = string.format ("%.1f", settings.distance_weight)
             flight_summary.score_weight_payload = string.format ("%.1f", settings.payload_weight)
-            flight_summary.score_wieght_time = string.format ("%.1f", settings.time_weight)
+            flight_summary.score_weight_time = string.format ("%.1f", settings.time_weight)
             flight_summary.score_weight_fuel = string.format ("%.1f", settings.fuel_weight)
             flight_summary.final_score = string.format ("%.2f", final_score) .. " points"
             -- write_flight_info() moved to LANDED→ENDED so peak G and penalties are included
