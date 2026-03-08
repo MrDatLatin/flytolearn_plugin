@@ -140,7 +140,7 @@ function check_disqualification()
     end
     -- Wrong runway: touchdown in upper half means came in on Rwy 22
     if along > (rwy_length / 2) then
-        return true, "Not designated runway - Please land on KRNT Rwy 16"  -- TEMP: revert to 'Courchevel Rwy 04' with LFLJ coordinates
+        return true, "Wrong runway - land on Rwy 16 only"  -- TEMP: revert to 'Courchevel Rwy 04' with LFLJ coordinates
     end
     return false, ""
 end

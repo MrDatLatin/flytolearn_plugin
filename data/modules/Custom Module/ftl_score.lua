@@ -64,7 +64,7 @@ function draw ()
     drawText(roboto, c.ui_x/2, 205, fuel_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
     local landing_color = (landing_dq or landing_penalty_pct > 0) and YELLOW or WHITE
     local score_color   = landing_dq and RED or WHITE
-    drawText(roboto, c.ui_x/2, 160, landing_txt, font_size, true, false, TEXT_ALIGN_CENTER, landing_color)
+    drawText(roboto, c.ui_x/2, 160, landing_txt, 32, true, false, TEXT_ALIGN_CENTER, landing_color)
     drawText(roboto, c.ui_x/2, 105, score_txt, 60, true, false, TEXT_ALIGN_CENTER, score_color)
     
     drawAll (components)
