@@ -465,10 +465,10 @@ The French Alps (LFHU → LFLJ) are challenging to fly and have custom scenery r
 
 ```lua
 -- TEMPORARY TEST — KRNT Rwy 16 (swap back to LFLJ values after testing)
--- RWY04_LAT, RWY04_LON = 45.395948, 6.632793   -- LFLJ Rwy 04 threshold
--- RWY22_LAT, RWY22_LON = 45.399094, 6.637169   -- LFLJ Rwy 22 threshold
-RWY04_LAT, RWY04_LON = 47.500260, 122.216821    -- KRNT Rwy 16 threshold (touchdown end, north)
-RWY22_LAT, RWY22_LON = 47.485983, 122.214876    -- KRNT Rwy 34 threshold (stop end, south)
+-- RWY04_LAT, RWY04_LON = 45.395948, 6.632793    -- LFLJ Rwy 04 threshold
+-- RWY22_LAT, RWY22_LON = 45.399094, 6.637169    -- LFLJ Rwy 22 threshold
+RWY04_LAT, RWY04_LON = 47.500260, -122.216821   -- KRNT Rwy 16 threshold (touchdown end, north)
+RWY22_LAT, RWY22_LON = 47.485983, -122.214876   -- KRNT Rwy 34 threshold (stop end, south)
 RWY_WIDTH_M = 18  -- approximate
 ```
 
@@ -476,10 +476,12 @@ RWY_WIDTH_M = 18  -- approximate
 
 | Point | Role | Latitude | Longitude |
 |-------|------|----------|-----------|
-| Rwy 16 threshold | Touchdown end (north) | 47.500260 | 122.216821 |
-| Rwy 34 threshold | Stop end (south) | 47.485983 | 122.214876 |
+| Rwy 16 threshold | Touchdown end (north) | 47.500260 | **-122.216821** |
+| Rwy 34 threshold | Stop end (south) | 47.485983 | **-122.214876** |
 
-**Status: Coordinates captured — ready for code swap ✅** (as of March 7, 2026)
+⚠️ **Longitudes must be negative** (Western hemisphere). Earlier docs recorded them without the minus sign — that caused the v1.1.3 score=0 bug (false "Landed off runway" DQ). Fixed in v1.2.0.
+
+**Status: Active in code ✅ — student testing underway (March 8, 2026)**
 
 ### After KRNT Testing Passes
 
@@ -542,3 +544,30 @@ Two bugs discovered during live student testing (KBFI → KRNT flight, score sho
 - Committed and pushed to GitHub
 
 **Note:** KRNT coordinates are still active (temporary test config). After KRNT testing passes, revert to LFLJ coordinates and do a final test pass before production release.
+
+---
+
+## Session: March 8, 2026 — Text Overflow Fix + Score Screen Polish (Claude Code)
+
+**Context:** Live student testing of v1.2.0 at KBFI → KRNT. Score and DQ logic confirmed working (Test #4 — wrong runway detection triggered correctly). However, the landing quality line was overflowing the 920px card width.
+
+**Bug: Landing quality text overflow** (`ftl_score.lua` line 67 + `flytolearn.lua` line ~143)
+
+- DQ message "Disqualified: Not designated runway - Please land on KRNT Rwy 16" rendered at font_size=42 was ~63 characters wide — overflowed both sides of the 920px card
+- Two-pronged fix:
+  1. Reduced `drawText` font from `font_size` (42) to `32` for the landing quality line only
+  2. Shortened wrong-runway DQ reason string from `"Not designated runway - Please land on KRNT Rwy 16"` to `"Wrong runway - land on Rwy 16 only"`
+
+**Files modified:**
+- `data/modules/Custom Module/ftl_score.lua` — line 67: `font_size` → `32` for landing_txt drawText
+- `data/modules/Custom Module/flytolearn.lua` — wrong-runway DQ reason shortened
+
+**Distribution:**
+- Updated files deployed to X-Plane installation
+- `FlyToLearn_v1.2.0_KRNT_test.zip` rebuilt (15.7 MB) on Desktop
+- Committed and pushed: commit `ff3641a` — "Fix landing quality text overflow: smaller font + shorter DQ message"
+
+**Status at end of session:**
+- KRNT student testing underway — DQ and landing quality display confirmed working
+- README.md, HANDOFF.md, MEMORY.md updated for new chat handoff
+- Next: complete remaining KRNT test scenarios, then revert to LFLJ coordinates for production release

@@ -2,7 +2,7 @@
 
 A SASL 3.x plugin for X-Plane 12 that scores student pilot flight performance. Built as an educational tool to provide objective, automated scoring for flight training scenarios.
 
-**Current Version:** 1.1.3  
+**Current Version:** 1.2.0
 **License:** MIT  
 **Author:** Tom  
 **Framework:** SASL 3.16.4 (Free Edition) — LuaJIT / Lua 5.1 compatible  
@@ -78,7 +78,7 @@ flytolearn_plugin/
 
 ## Installation
 
-> **For testers:** Download `FlyToLearn_v1.1.3_test.zip`, unzip it, and copy the `FlyToLearn/` folder to your plugins directory. Works on Mac, Windows, and Linux.
+> **For testers:** Download `FlyToLearn_v1.2.0_KRNT_test.zip`, unzip it, and copy the `FlyToLearn/` folder to your plugins directory. Works on Mac, Windows, and Linux.
 
 1. Copy the `FlyToLearn/` folder to `X-Plane 12/Resources/plugins/`
 2. The folder structure inside X-Plane should be:
@@ -160,13 +160,21 @@ The plugin currently reads these X-Plane datarefs:
 
 `main.lua` line 29 controls log verbosity:
 ```lua
-sasl.setLogLevel(LOG_DEBUG)   -- development (current)
--- sasl.setLogLevel(LOG_INFO)  -- distribution
+-- sasl.setLogLevel(LOG_DEBUG)  -- development only
+sasl.setLogLevel(LOG_INFO)      -- distribution (current)
 ```
 
 ---
 
 ## Changelog
+
+### v1.2.0 — 2026-Mar-08
+- Added landing quality enhancement: G-force monitoring, runway boundary detection, score penalties/disqualification
+- Fixed score screen layout — uniform 45px spacing, landing quality line now visible
+- Fixed landing quality line font size (42 → 32) to prevent text overflow on long DQ messages
+- Shortened wrong-runway DQ message for display fit
+- Fixed critical longitude sign bug in KRNT test coordinates (Western hemisphere = negative)
+- Switched log level from LOG_DEBUG to LOG_INFO for distribution
 
 ### v1.1.3 — 2024-Apr-02
 - Changed final score calculation, rounded log values to 4 digits
@@ -191,17 +199,17 @@ sasl.setLogLevel(LOG_DEBUG)   -- development (current)
 
 See [HANDOFF.md](docs/HANDOFF.md) for full implementation details.
 
-### Implemented — Pending Test: Landing Quality Enhancement
-Coded March 1, 2026. Deployed to X-Plane. Commit `3185df0`. Version bump to **1.2.0** after successful test.
+### Implemented — In Student Testing: Landing Quality Enhancement
+Coded March 1, 2026. v1.2.0 released March 8, 2026. Currently testing with **KBFI → KRNT** in X-Plane 12 default demo scenery. See [HANDOFF.md](docs/HANDOFF.md) for full details and test plan.
 
 - **G-force monitoring** ✅ — Peak G tracked across full landing roll (not just touchdown instant)
   - > 2.5G = 5% score penalty (hard landing)
   - > 3.5G = flight disqualified (crash)
-- **Runway boundary detection** ✅ — Rotated rectangle check against confirmed LFLJ Rwy 04 coordinates
+- **Runway boundary detection** ✅ — Rotated rectangle check against confirmed runway coordinates
   - Off-runway landing = disqualification
-  - Landing on wrong runway (Rwy 22) = disqualification with specific message
+  - Landing on wrong runway = disqualification with specific message
 - **Score integration** ✅ — Percentage-based deductions applied after base score calculation
-- **Score screen updates** ✅ — Landing quality line added to final score display
+- **Score screen updates** ✅ — Landing quality line added to final score display with colour coding
 
 ### Future
 - Extend runway detection to any runway (not just hardcoded Courchevel)
