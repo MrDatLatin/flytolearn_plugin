@@ -2,9 +2,9 @@
 
 This document captures the complete project context, architecture decisions, active work items, and institutional knowledge accumulated during development. It is intended for any developer (human or AI assistant) who needs to understand or continue work on this plugin.
 
-**Last updated:** March 1, 2026
+**Last updated:** March 8, 2026
 **Author:** Tom
-**Current version:** 1.1.3
+**Current version:** 1.2.0
 
 ---
 
@@ -430,7 +430,7 @@ This session established the GitHub repository and copied all source files from 
 - Created `docs/ftl_test_plan.csv` with 6-scenario test plan for team distribution
 - Created `FlyToLearn_v1.1.3_test.zip` on Desktop (16 MB) — cross-platform (Mac/Win/Linux), excludes `.bak` files and `flytolearn_config.ini` so testers get clean defaults on first run
 
-**Test plan:**
+**Test plan (originally written for LFLJ — also applies to KRNT temp config):**
 
 | # | Test | How | Expected Result |
 |---|------|-----|-----------------|
@@ -443,3 +443,102 @@ This session established the GitHub repository and copied all source files from 
 
 **To speed up testing:** `min_flight_length` is currently set to `0.1` in `flytolearn_config.ini` — allows scoring after ~6 seconds airborne.
 **⚠️ Reset to `2` when testing is complete** (edit `flytolearn_config.ini` line 9, or change it via the Options screen in-sim).
+
+---
+
+## KRNT Temporary Test Configuration
+
+### Rationale
+
+The French Alps (LFHU → LFLJ) are challenging to fly and have custom scenery requirements. To rapidly test the landing quality enhancement logic, a simpler test pair in the **X-Plane 12 default demo scenery** (Seattle / Puget Sound region) was selected.
+
+### Test Route
+
+- **Departure:** KBFI (Boeing Field, Seattle) — default demo scenery
+- **Arrival:** KRNT (Renton Municipal) — ~3nm southeast of KBFI, flat terrain, easy approaches
+- **Landing runway:** KRNT **Runway 16** (heading ~160°) — natural approach direction coming from KBFI to the north
+- **Departure runway at KBFI:** Runway 13L or 13R (heading ~130° southeast, pointing directly toward KRNT)
+
+### Implementation Plan
+
+**Temporary coordinate swap only** — do NOT create a separate plugin copy. In `flytolearn.lua`, comment out the LFLJ constants and substitute KRNT Rwy 33 values. One change to revert when done.
+
+```lua
+-- TEMPORARY TEST — KRNT Rwy 16 (swap back to LFLJ values after testing)
+-- RWY04_LAT, RWY04_LON = 45.395948, 6.632793   -- LFLJ Rwy 04 threshold
+-- RWY22_LAT, RWY22_LON = 45.399094, 6.637169   -- LFLJ Rwy 22 threshold
+RWY04_LAT, RWY04_LON = 47.500260, 122.216821    -- KRNT Rwy 16 threshold (touchdown end, north)
+RWY22_LAT, RWY22_LON = 47.485983, 122.214876    -- KRNT Rwy 34 threshold (stop end, south)
+RWY_WIDTH_M = 18  -- approximate
+```
+
+### Runway Coordinates (Confirmed in-sim, March 7, 2026)
+
+| Point | Role | Latitude | Longitude |
+|-------|------|----------|-----------|
+| Rwy 16 threshold | Touchdown end (north) | 47.500260 | 122.216821 |
+| Rwy 34 threshold | Stop end (south) | 47.485983 | 122.214876 |
+
+**Status: Coordinates captured — ready for code swap ✅** (as of March 7, 2026)
+
+### After KRNT Testing Passes
+
+1. Revert `flytolearn.lua` to LFLJ coordinates
+2. Run the same 6-scenario test plan at LFLJ to confirm
+3. Bump version to **1.2.0**
+
+---
+
+## Session: March 7, 2026 — KRNT Test Plan Documentation (Claude Code)
+
+**What was done:**
+- Recovered KBFI → KRNT test plan from Claude.ai chat history (not previously captured in project docs)
+- Added KRNT Temporary Test Configuration section to HANDOFF.md
+- Updated MEMORY.md and README.md with KRNT test plan and status
+- No code written this session
+
+**Status at end of session:**
+- Landing quality code deployed and ready (LFLJ coordinates active)
+- KRNT Rwy 16/34 coordinates captured and recorded (March 7, 2026)
+- Ready for temporary coordinate swap into `flytolearn.lua`
+
+**Next steps:**
+1. Make temporary KRNT coordinate swap in `flytolearn.lua` (approved by Tom — awaiting go-ahead)
+2. Run 6-scenario test at KBFI → KRNT
+3. Revert to LFLJ coordinates
+4. Bump version to 1.2.0
+
+**Correction note:** Earlier docs incorrectly stated KRNT Runway 33/15 — correct designation is **Runway 16/34**.
+
+---
+
+## Session: March 8, 2026 — Bug Fixes + v1.2.0 Release Build (Claude Code)
+
+**What was done:**
+
+Two bugs discovered during live student testing (KBFI → KRNT flight, score showing 0.00, no landing quality message):
+
+**Bug 1 — Missing negative sign on KRNT longitude coordinates** (`flytolearn.lua` lines 32-33)
+- KRNT is Western hemisphere; longitudes must be negative
+- Code had `122.216821` / `122.214876` — corrected to `-122.216821` / `-122.214876`
+- Effect: Without this fix, `is_within_runway()` computed the aircraft as ~19,000 km east of KRNT, triggering a false "Landed off runway" DQ and setting score = 0 on every flight
+
+**Bug 2 — Landing quality line not visible on score screen** (`ftl_score.lua` draw section)
+- Adjusted y-positions for all 7 text lines in `draw()` to use uniform 45px spacing throughout
+- New positions: flightplan=385, distance=340, payload=295, time=250, fuel=205, landing=160, score=105
+- Previously the landing quality line (y=147) was too close to the fuel line (y=187) — only 40px gap with font_size=42, causing overlap/invisibility
+
+**Version bumped:** 1.1.3 → **1.2.0**
+**Log level switched:** `LOG_DEBUG` → `LOG_INFO` for distribution
+
+**Files modified:**
+- `data/modules/main.lua` — version bump, log level switch
+- `data/modules/Custom Module/flytolearn.lua` — longitude sign fix
+- `data/modules/Custom Module/ftl_score.lua` — score screen layout fix
+
+**Distribution:**
+- Updated files deployed to X-Plane installation
+- `FlyToLearn_v1.2.0_KRNT_test.zip` (15.7 MB) created on Desktop — cross-platform (Mac/Win/Linux), excludes `.bak` files and `flytolearn_config.ini`
+- Committed and pushed to GitHub
+
+**Note:** KRNT coordinates are still active (temporary test config). After KRNT testing passes, revert to LFLJ coordinates and do a final test pass before production release.

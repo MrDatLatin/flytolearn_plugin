@@ -57,15 +57,15 @@ end
 function draw ()
     drawTexture (bkgnd_img, 0, 0, c.ui_x, c.ui_y, WHITE)
 
-    drawText(roboto, c.ui_x/2, 382-15, flightplan_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
-    drawText(roboto, c.ui_x/2, 382-45-15, distance_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
-    drawText(roboto, c.ui_x/2, 382-90-15, payload_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
-    drawText(roboto, c.ui_x/2, 382-135-15, time_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
-    drawText(roboto, c.ui_x/2, 382-180-15, fuel_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
+    drawText(roboto, c.ui_x/2, 385, flightplan_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
+    drawText(roboto, c.ui_x/2, 340, distance_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
+    drawText(roboto, c.ui_x/2, 295, payload_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
+    drawText(roboto, c.ui_x/2, 250, time_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
+    drawText(roboto, c.ui_x/2, 205, fuel_txt, font_size, true, false, TEXT_ALIGN_CENTER, WHITE)
     local landing_color = (landing_dq or landing_penalty_pct > 0) and YELLOW or WHITE
     local score_color   = landing_dq and RED or WHITE
-    drawText(roboto, c.ui_x/2, 382-220-15, landing_txt, font_size, true, false, TEXT_ALIGN_CENTER, landing_color)
-    drawText(roboto, c.ui_x/2, 382-260-15, score_txt, 60, true, false, TEXT_ALIGN_CENTER, score_color)
+    drawText(roboto, c.ui_x/2, 160, landing_txt, font_size, true, false, TEXT_ALIGN_CENTER, landing_color)
+    drawText(roboto, c.ui_x/2, 105, score_txt, 60, true, false, TEXT_ALIGN_CENTER, score_color)
     
     drawAll (components)
 end

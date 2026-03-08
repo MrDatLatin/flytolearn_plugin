@@ -29,8 +29,8 @@ weighted_dist, weighted_load, weighted_fuel, weighted_time = 0,0,0,0
 -- TEMPORARY TEST — KRNT Rwy 16/34 (revert to LFLJ values after testing)
 -- RWY04_LAT, RWY04_LON = 45.395948, 6.632793  -- LFLJ Rwy 04 threshold (touchdown end, south/lower)
 -- RWY22_LAT, RWY22_LON = 45.399094, 6.637169  -- LFLJ Rwy 22 threshold (stop end, north/upper)
-RWY04_LAT, RWY04_LON = 47.500260, 122.216821   -- KRNT Rwy 16 threshold (touchdown end, north)
-RWY22_LAT, RWY22_LON = 47.485983, 122.214876   -- KRNT Rwy 34 threshold (stop end, south)
+RWY04_LAT, RWY04_LON = 47.500260, -122.216821   -- KRNT Rwy 16 threshold (touchdown end, north)
+RWY22_LAT, RWY22_LON = 47.485983, -122.214876   -- KRNT Rwy 34 threshold (stop end, south)
 RWY_WIDTH_M = 18
 
 -- Landing quality tracking

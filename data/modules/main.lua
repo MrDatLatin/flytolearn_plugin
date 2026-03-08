@@ -14,9 +14,9 @@ c = {} -- constants
 drefs = {}
 command_refs = {}
 
-c.curr_version = "1.1.3"
+c.curr_version = "1.2.0"
 
-settings.version = "1.1.3"
+settings.version = "1.2.0"
 settings.distance_weight = 1
 settings.payload_weight = 1
 settings.fuel_weight = 1
@@ -26,8 +26,8 @@ settings.min_flight_length = 2
 
 --------------------------------------------------------------------------------
 -- Only one of the following lines should be uncommented
-sasl.setLogLevel ( LOG_DEBUG )  -- use for development
--- sasl.setLogLevel ( LOG_INFO )  -- use for distribution
+-- sasl.setLogLevel ( LOG_DEBUG )  -- use for development
+sasl.setLogLevel ( LOG_INFO )  -- use for distribution
 --------------------------------------------------------------------------------
 
 -- These make SASL light.  You may need to turn one or more on for high level magic
