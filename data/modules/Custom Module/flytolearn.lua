@@ -26,11 +26,12 @@ end_time, end_fuel, end_dist, final_score = 0,0,0,0
 calc_dist, calc_load, calc_fuel, calc_time = 0,0,0,0
 weighted_dist, weighted_load, weighted_fuel, weighted_time = 0,0,0,0
 
--- TEMPORARY TEST — KRNT Rwy 16/34 (revert to LFLJ values after testing)
--- RWY04_LAT, RWY04_LON = 45.395948, 6.632793  -- LFLJ Rwy 04 threshold (touchdown end, south/lower)
--- RWY22_LAT, RWY22_LON = 45.399094, 6.637169  -- LFLJ Rwy 22 threshold (stop end, north/upper)
-RWY04_LAT, RWY04_LON = 47.500260, -122.216821   -- KRNT Rwy 16 threshold (touchdown end, north)
-RWY22_LAT, RWY22_LON = 47.485983, -122.214876   -- KRNT Rwy 34 threshold (stop end, south)
+-- LFLJ Courchevel — land ONLY on Rwy 04 (uphill). Rwy 22 landing is prohibited.
+RWY04_LAT, RWY04_LON = 45.395948, 6.632793  -- LFLJ Rwy 04 threshold (touchdown end, south/lower)
+RWY22_LAT, RWY22_LON = 45.399094, 6.637169  -- LFLJ Rwy 22 threshold (stop end, north/upper)
+-- KRNT TEMP TEST (swap back when needed):
+-- RWY04_LAT, RWY04_LON = 47.500260, -122.216821   -- KRNT Rwy 16 threshold (touchdown end, north)
+-- RWY22_LAT, RWY22_LON = 47.485983, -122.214876   -- KRNT Rwy 34 threshold (stop end, south)
 RWY_WIDTH_M = 18
 
 -- Landing quality tracking
@@ -138,9 +139,9 @@ function check_disqualification()
     if not on_runway then
         return true, "Landed off runway"
     end
-    -- Wrong runway: touchdown in upper half means came in on Rwy 22
+    -- Wrong runway: touchdown in upper half means came in on Rwy 22 (prohibited at Courchevel)
     if along > (rwy_length / 2) then
-        return true, "Wrong runway - land on Rwy 16 only"  -- TEMP: revert to 'Courchevel Rwy 04' with LFLJ coordinates
+        return true, "Wrong runway - land on Rwy 04 only"
     end
     return false, ""
 end
