@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FlyToLearn Competition — LFHU to LFLJ Flight Instructions</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 11pt;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 0;
+    }
+
+    /* ── Header Banner ── */
+    .header {
+      background: linear-gradient(135deg, #0d1b2a 0%, #1a3a5c 60%, #0d3b6e 100%);
+      color: #fff;
+      padding: 28px 48px 24px 48px;
+      border-bottom: 4px solid #f0a500;
+    }
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .header h1 {
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      font-size: 26pt;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .header h1 span { color: #f0a500; }
+    .header .subtitle {
+      font-size: 11pt;
+      font-weight: 300;
+      color: #b0c8e8;
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+    }
+    .header .meta {
+      text-align: right;
+      font-size: 9pt;
+      color: #7fa8cc;
+      line-height: 1.8;
+    }
+    .badge {
+      display: inline-block;
+      background: #f0a500;
+      color: #0d1b2a;
+      font-weight: 700;
+      font-size: 8pt;
+      padding: 3px 10px;
+      border-radius: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    /* ── Body ── */
+    .content {
+      padding: 28px 48px 40px 48px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── Section headers ── */
+    h2 {
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #0d3b6e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #f0a500;
+      padding-bottom: 5px;
+      margin: 28px 0 14px 0;
+    }
+    h2:first-of-type { margin-top: 0; }
+
+    p { line-height: 1.6; margin-bottom: 10px; }
+
+    /* ── Callout boxes ── */
+    .callout {
+      border-left: 4px solid #0d3b6e;
+      background: #f0f6ff;
+      padding: 11px 16px;
+      margin: 14px 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 10pt;
+      line-height: 1.6;
+    }
+    .callout.warning {
+      border-color: #e07b00;
+      background: #fff8ec;
+    }
+    .callout.success {
+      border-color: #2a7a2a;
+      background: #f0fff0;
+    }
+    .callout.danger {
+      border-color: #b00020;
+      background: #fff0f2;
+    }
+    .callout strong { display: block; margin-bottom: 3px; }
+
+    /* ── Numbered step list ── */
+    .steps {
+      counter-reset: step-counter;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .steps li {
+      counter-increment: step-counter;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 10px;
+      font-size: 10pt;
+      line-height: 1.6;
+    }
+    .steps li::before {
+      content: counter(step-counter);
+      background: #0d3b6e;
+      color: #fff;
+      font-weight: 700;
+      font-size: 9pt;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .steps li > div,
+    .steps li > span {
+      display: block;
+    }
+
+    /* ── Two-column layout ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: 14px 0;
+    }
+
+    /* ── Airport info box ── */
+    .airport-box {
+      background: #0d1b2a;
+      color: #b0d0f0;
+      border-radius: 6px;
+      padding: 14px 18px;
+      font-size: 9.5pt;
+      line-height: 1.8;
+    }
+    .airport-box .label {
+      color: #f0a500;
+      font-weight: 700;
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #1a3a5c;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+    }
+    .airport-box .icao {
+      font-size: 18pt;
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+    .airport-box .name {
+      font-size: 10.5pt;
+      font-weight: 500;
+      color: #d0e8ff;
+      margin-bottom: 2px;
+    }
+    .airport-box .rwy {
+      color: #7ecff5;
+      font-weight: 700;
+    }
+    .airport-box .warn-rwy {
+      color: #f08070;
+      font-weight: 700;
+    }
+
+    /* ── Score result table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 10pt;
+    }
+    th {
+      background: #0d3b6e;
+      color: #fff;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 700;
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      letter-spacing: 0.3px;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #dde6f0;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    tr:nth-child(even) td { background: #f4f8ff; }
+    .result-clean  { color: #2a7a2a; font-weight: 700; }
+    .result-warn   { color: #b05a00; font-weight: 700; }
+    .result-dq     { color: #b00020; font-weight: 700; }
+
+    /* ── Route diagram ── */
+    .route-diagram {
+      background: #0d1b2a;
+      border-radius: 6px;
+      padding: 18px 24px;
+      margin: 14px 0;
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      font-size: 11pt;
+      color: #b0d0f0;
+      text-align: center;
+      line-height: 2.2;
+    }
+    .route-diagram .airport { color: #f0a500; font-size: 14pt; font-weight: 700; }
+    .route-diagram .arrow   { color: #7ecff5; font-size: 13pt; }
+    .route-diagram .detail  { color: #5a8090; font-size: 9pt; display: block; line-height: 1.4; margin-top: -6px; margin-bottom: 4px; }
+
+    /* ── One-way ops banner ── */
+    .oneway-banner {
+      background: #2a0a0a;
+      border: 2px solid #b00020;
+      border-radius: 6px;
+      padding: 14px 20px;
+      margin: 14px 0;
+      color: #ffcdd2;
+      font-size: 10pt;
+      line-height: 1.7;
+    }
+    .oneway-banner .banner-title {
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      font-size: 12pt;
+      font-weight: 700;
+      color: #ff6b6b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .oneway-banner .ops-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .oneway-banner .ops-cell {
+      background: #3a0f0f;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 9.5pt;
+    }
+    .oneway-banner .ops-cell strong { color: #f0a500; display: block; margin-bottom: 2px; }
+
+    /* ── Print ── */
+    @media print {
+      body { font-size: 10pt; }
+      .content { padding: 20px 36px 30px 36px; }
+      .header { padding: 20px 36px 18px 36px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>FlyToLearn <span>Competition</span></h1>
+        <div class="subtitle">Student Flight Instructions — LFHU to LFLJ</div>
+        <div class="badge">v1.4.0 · Alpe d'Huez to Courchevel</div>
+      </div>
+      <div class="meta">
+        X-Plane 12<br>
+        French Alps Scenery Required<br>
+        Savoie / Isère, France
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- About This Flight -->
+    <h2>About This Flight</h2>
+
+    <p>Welcome to <strong>FlyToLearn Competition</strong>! This advanced challenge takes you through the French Alps from <strong>Altiport Huez (LFHU)</strong>, high above Alpe d'Huez, to the legendary <strong>Courchevel Altiport (LFLJ)</strong> — one of the most demanding airports in the world. The flight covers approximately 25 nautical miles across high Alpine terrain.</p>
+
+    <p>The plugin scores your flight on distance efficiency, fuel burned, flight time, and landing quality. Landing precision is critical here: Courchevel has a short, steeply sloped runway with <strong>strictly one-way operations</strong>. The score screen appears as soon as you come to a full stop.</p>
+
+    <!-- One-Way Ops -->
+    <div class="oneway-banner">
+      <div class="banner-title">⚠ Courchevel One-Way Operations — Read Before Flying</div>
+      Courchevel Altiport operates one direction at a time due to its extreme 18.5% uphill gradient. These rules apply in real operations and are enforced by the plugin.
+      <div class="ops-row">
+        <div class="ops-cell">
+          <strong>✈ LANDING — Runway 04 only</strong>
+          Approach from the southwest. Land heading northeast (~044°), touching down at the lower (south) end of the runway. The uphill slope helps you stop.
+        </div>
+        <div class="ops-cell">
+          <strong>✈ TAKEOFF — Runway 22 only</strong>
+          Depart heading southwest (~224°), rolling downhill off the upper end. You are arriving, not departing — do not attempt to land from this direction.
+        </div>
+      </div>
+    </div>
+
+    <!-- Route Overview -->
+    <h2>Your Route</h2>
+
+    <div class="route-diagram">
+      <span class="airport">LFHU</span>
+      <span class="detail">Altiport Huez · Alpe d'Huez, France · Elev. ~6,100 ft<br>Take off and climb northeast into the Alps</span>
+      <span class="arrow">✈ &nbsp;~25 nautical miles through the French Alps&nbsp; ✈</span>
+      <span class="detail">Cross Alpine terrain — plan your altitude and descent carefully</span>
+      <span class="airport">LFLJ</span>
+      <span class="detail">Courchevel Altiport · Savoie, France · Elev. ~6,588 ft<br>Land Runway 04 only — approach from the SOUTHWEST — touch down at the LOWER (south) end</span>
+    </div>
+
+    <div class="two-col">
+      <div class="airport-box">
+        <div class="label">Departure</div>
+        <div class="icao">LFHU</div>
+        <div class="name">Altiport Huez, Alpe d'Huez</div>
+        Elevation ~6,100 ft<br>
+        <span class="rwy">Single runway altiport</span><br>
+        Climb to clear surrounding terrain<br>
+        Head northeast toward Courchevel
+      </div>
+      <div class="airport-box">
+        <div class="label">Arrival</div>
+        <div class="icao">LFLJ</div>
+        <div class="name">Courchevel Altiport</div>
+        Elevation ~6,588 ft · Runway 537 m<br>
+        <span class="rwy">Runway 04 — land only</span><br>
+        <span class="warn-rwy">Runway 22 — takeoff only (DQ if landed)</span><br>
+        Approach from the southwest (~224° inbound)
+      </div>
+    </div>
+
+    <!-- Step by Step -->
+    <h2>Step-by-Step</h2>
+
+    <ul class="steps">
+      <li><div>Load X-Plane 12 and spawn at <strong>LFHU — Altiport Huez</strong>. Confirm the FlyToLearn logo bar is visible at the bottom of the screen.</div></li>
+      <li><div>Click the <strong>FlyToLearn logo</strong> to open the start screen. Confirm the route shows <strong>LFHU → LFLJ</strong>, then click <strong>Start</strong>.</div></li>
+      <li><div>Take off from LFHU and climb to a safe altitude. Surrounding Alpine terrain is high — do not descend until you are established on your approach to Courchevel.</div></li>
+      <li><div>Navigate approximately <strong>25 nm northeast</strong> through the French Alps toward LFLJ. Plan your fuel and descent early — there is little room to maneuver near Courchevel.</div></li>
+      <li><div>
+        Set up your approach to arrive from the <strong>southwest</strong>, lining up to land on <strong>Runway 04 heading northeast (~044°)</strong>.
+        <div class="callout danger" style="margin-top:10px;">
+          <strong>Critical — approach from the SOUTHWEST only:</strong>
+          You must be established southwest of the field and fly inbound (northeast) to land on Runway 04. If you approach from the northeast, you will land heading southwest on Runway 22 — this is prohibited and will result in immediate disqualification. If you overshoot, execute a go-around and re-establish from the southwest.
+        </div>
+      </div></li>
+      <li><div>
+        Touch down at the <strong>lower (south) end of Runway 04</strong> — the very bottom of the slope. Land early and on-speed.
+        <div class="callout warning" style="margin-top:10px;">
+          <strong>Do not land long:</strong>
+          Courchevel's runway is only 537 m (1,762 ft) and slopes steeply uphill. Floating past the midpoint leaves insufficient runway to stop and will result in disqualification.
+        </div>
+      </div></li>
+      <li><div>The uphill slope will help slow the aircraft. Slow to a full stop — the score screen appears automatically.</div></li>
+    </ul>
+
+    <!-- What You Will See -->
+    <h2>What the Score Screen Shows</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Landing Result</th>
+          <th>What You Did</th>
+          <th>Score Effect</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="result-clean">Landing: Clean</span></td>
+          <td>Smooth landing on Rwy 04, G-force ≤ 2.5</td>
+          <td>No deduction — full score</td>
+        </tr>
+        <tr>
+          <td><span class="result-warn">Hard landing (−5%)</span></td>
+          <td>Firm touchdown, G-force between 2.5 and 3.5</td>
+          <td>5% deducted from final score</td>
+        </tr>
+        <tr>
+          <td><span class="result-dq">DISQUALIFIED — Crash</span></td>
+          <td>G-force exceeded 3.5 at landing</td>
+          <td>Score = 0</td>
+        </tr>
+        <tr>
+          <td><span class="result-dq">DISQUALIFIED — Wrong runway</span></td>
+          <td>Landed heading southwest on Rwy 22 (prohibited direction)</td>
+          <td>Score = 0 · Must approach from the southwest and land Rwy 04</td>
+        </tr>
+        <tr>
+          <td><span class="result-dq">DISQUALIFIED — Off runway</span></td>
+          <td>Touched down in snow, grass, or off the paved surface</td>
+          <td>Score = 0 · Stay on the runway centerline</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Tips -->
+    <h2>Tips for a Good Score</h2>
+
+    <div class="two-col">
+      <div>
+        <div class="callout success">
+          <strong>Plan your descent early</strong>
+          Courchevel sits at 6,588 ft. Begin descending well before the field and arrive established on final from the southwest. Last-minute maneuvering in Alpine terrain is dangerous.
+        </div>
+        <div class="callout success">
+          <strong>Fly on-speed — not too fast</strong>
+          Arriving too fast makes it impossible to stop on a 537 m runway. Stabilize your approach speed early and resist the urge to carry extra knots "for safety."
+        </div>
+      </div>
+      <div>
+        <div class="callout success">
+          <strong>Touch down at the threshold</strong>
+          Land at the very bottom of the slope (the south/lower end of Rwy 04). Every metre of runway counts. A firm, early touchdown beats a smooth float every time.
+        </div>
+        <div class="callout warning">
+          <strong>Sim speed is locked at 1×</strong>
+          The plugin prevents time acceleration during the flight. Plan the full ~25 nm transit at real-time pace.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
