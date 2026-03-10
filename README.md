@@ -2,17 +2,27 @@
 
 A SASL 3.x plugin for X-Plane 12 that scores student pilot flight performance. Built as an educational tool to provide objective, automated scoring for flight training scenarios.
 
-**Current Version:** 1.2.0
-**License:** MIT  
-**Author:** Tom  
-**Framework:** SASL 3.16.4 (Free Edition) — LuaJIT / Lua 5.1 compatible  
-**Platform:** X-Plane 12 (Windows confirmed; macOS/Linux untested)
+**License:** MIT
+**Author:** Tom
+**Framework:** SASL 3.16.4 (Free Edition) — LuaJIT / Lua 5.1 compatible
+**Platform:** X-Plane 12 (Mac, Windows, Linux)
+
+---
+
+## Two Plugins — One Repo
+
+This repository contains two independent, self-contained plugins. Each can be installed on its own or both can run simultaneously in X-Plane 12 without conflict.
+
+| Plugin | Version | Route | Scenery |
+|--------|---------|-------|---------|
+| **FlyToLearn Basic** | 1.3.0 | KBFI → KRNT (Seattle) | X-Plane 12 default demo scenery |
+| **FlyToLearn Competition** | 1.4.0 | LFHU → LFLJ (French Alps) | Enhanced LFLJ scenery required |
 
 ---
 
 ## What It Does
 
-FlyToLearn runs inside X-Plane as a SASL plugin and tracks a flight from departure to arrival, then produces a score based on configurable weights for distance, payload, fuel efficiency, and elapsed time. It's designed for instructor-led training where students repeatedly fly specific routes (e.g., LFHU → LFLJ in the French Alps) and receive consistent, comparable scores.
+FlyToLearn runs inside X-Plane as a SASL plugin and tracks a flight from departure to arrival, then produces a score based on configurable weights for distance, payload, fuel efficiency, and elapsed time. It's designed for instructor-led training where students repeatedly fly specific routes and receive consistent, comparable scores.
 
 ### Scoring Formula
 
@@ -20,7 +30,17 @@ FlyToLearn runs inside X-Plane as a SASL plugin and tracks a flight from departu
 final_score = (weighted_distance × weighted_payload) / (weighted_time × weighted_fuel) × 100
 ```
 
-Each factor has a configurable weight (0.5–2.0) adjustable through the in-sim UI.
+Each factor has a configurable weight (0.5–2.0) adjustable through the in-sim UI. Landing quality penalties are applied after the base score is calculated.
+
+### Landing Quality
+
+| Result | Condition | Score Effect |
+|--------|-----------|--------------|
+| Clean | G-force ≤ 2.5 at landing | No deduction |
+| Hard landing | G-force 2.5–3.5 | −5% penalty |
+| Crash (DQ) | G-force > 3.5 | Score = 0 |
+| Wrong runway (DQ) | Landed on prohibited runway | Score = 0 |
+| Off runway (DQ) | Touched down off pavement | Score = 0 |
 
 ### Flight Phase State Machine
 
@@ -30,82 +50,70 @@ LIMBO → DEPARTING → INFLIGHT → LANDED → ENDED
 
 - **LIMBO** — Plugin loaded, waiting for user to start a challenge
 - **DEPARTING** — On ground, start button pressed, waiting for takeoff
-- **INFLIGHT** — Airborne, sim speed locked to 1x, tracking distance/fuel/time
-- **LANDED** — Touched down, calculating score, finding arrival airport
+- **INFLIGHT** — Airborne, sim speed locked to 1×, tracking distance/fuel/time
+- **LANDED** — Touched down, tracking peak G-force, calculating score
 - **ENDED** — Stopped (groundspeed ≤ 0.01), score popup displayed, summary log written
 
-### Flight Summary Logging
-
-Each completed flight writes a `.info` file to the X-Plane root directory with raw X-Plane data, converted values, scoring weights, and final score.
+**Edge case:** Touch-down before the 2-minute minimum resets to DEPARTING — prevents false scores from departure bounces.
 
 ---
-
-## Repository
-
-**GitHub:** https://github.com/MrDatLatin/flytolearn_plugin
 
 ## Repository Structure
 
 ```
 flytolearn_plugin/
-├── data/
+├── data/                                    # Competition source (v1.4.0, LFLJ)
 │   └── modules/
-│       ├── main.lua                      # Entry point, config, component loading
+│       ├── main.lua                         # Entry point, config, component loading
 │       └── Custom Module/
-│           ├── flytolearn.lua            # Core scoring logic & state machine
-│           ├── timer_library.lua         # xLua-style timer functions for SASL
-│           ├── ftl_logo.lua              # Logo bar component
-│           ├── ftl_start.lua             # Start screen UI
-│           ├── ftl_options.lua           # Options/weights UI
-│           ├── ftl_reboot.lua            # Screen change handler
-│           ├── ftl_score.lua             # Score display UI
-│           ├── ftl_inflight.lua          # Inflight status UI
-│           ├── ftl_status.lua            # Status display
-│           ├── flight_start.lua          # Flight start handler
-│           ├── keyboard_handler.lua      # Input handling
-│           ├── ui_button.lua             # Reusable button component
-│           └── ui_assets/                # PNG button images & RobotoCondensed font
+│           ├── flytolearn.lua               # Core scoring logic & state machine
+│           ├── timer_library.lua            # xLua-style timer functions for SASL
+│           ├── ftl_logo.lua                 # Logo bar component
+│           ├── ftl_start.lua                # Start screen UI
+│           ├── ftl_options.lua              # Options/weights UI
+│           ├── ftl_reboot.lua               # Screen change handler
+│           ├── ftl_score.lua                # Score display UI
+│           ├── ftl_inflight.lua             # Inflight status UI
+│           ├── ftl_status.lua               # Status display
+│           ├── flight_start.lua             # Flight start handler
+│           ├── keyboard_handler.lua         # Input handling
+│           ├── ui_button.lua                # Reusable button component
+│           └── ui_assets/                   # PNG button images & RobotoCondensed font
+├── FlyToLearn_Basic/                        # Basic plugin — v1.3.0, KBFI→KRNT
+│   └── data/modules/                        # Same structure as above, KRNT coords
+├── FlyToLearn_Competition/                  # Competition plugin — v1.4.0, LFHU→LFLJ
+│   └── data/modules/                        # Same structure as above, LFLJ coords
 ├── docs/
-│   ├── HANDOFF.md                        # Full project context & design decisions
-│   ├── ftl_test_plan.csv                 # 6-scenario landing quality test plan
-│   └── lflj_runway_coordinates.csv       # Confirmed in-sim runway coordinates
-├── CLAUDE.md                             # Claude Code project memory
-├── README.md                             # This file
-└── LICENSE                               # MIT License
+│   ├── HANDOFF.md                           # Full project context & dev history
+│   ├── ftl_test_plan.csv                    # 6-scenario landing quality test plan
+│   ├── lflj_runway_coordinates.csv          # Confirmed in-sim runway coordinates
+│   ├── FlyToLearn_Basic_Install_Instructions.html
+│   ├── FlyToLearn_Basic_Flight_Instructions.html
+│   ├── FlyToLearn_Competition_Install_Instructions.html
+│   └── FlyToLearn_Competition_Flight_Instructions.html
+├── CLAUDE.md                                # Claude Code project memory
+├── README.md                                # This file
+└── LICENSE                                  # MIT License
 ```
 
 ---
 
 ## Installation
 
-> **For testers:** Download `FlyToLearn_v1.2.0_KRNT_test.zip`, unzip it, and copy the `FlyToLearn/` folder to your plugins directory. Works on Mac, Windows, and Linux.
+For students, use the provided ZIP files. Each extracts to a folder that drops directly into `X-Plane 12/Resources/plugins/`.
 
-1. Copy the `FlyToLearn/` folder to `X-Plane 12/Resources/plugins/`
-2. The folder structure inside X-Plane should be:
-   ```
-   X-Plane 12/
-   └── Resources/
-       └── plugins/
-           └── FlyToLearn/
-               └── data/
-                   └── modules/
-                       ├── main.lua
-                       ├── flytolearn.lua
-                       ├── timer_library.lua
-                       └── Custom Module/
-                           ├── ftl_logo.lua
-                           ├── ftl_start.lua
-                           ├── ... (other UI files)
-                           └── flytolearn_config.ini
-   ```
-3. Launch X-Plane 12 — the plugin loads automatically
-4. Access via **Plugins → Fly To Learn → Show Fly To Learn**
+- `FlyToLearn_Basic_v1.3.0.zip` → `Resources/plugins/FlyToLearn_Basic/`
+- `FlyToLearn_Competition_v1.4.0.zip` → `Resources/plugins/FlyToLearn_Competition/`
+
+Both ZIPs include all three platform binaries (Mac/Win/Linux). `flytolearn_config.ini` is excluded so students start with clean defaults.
+
+See `docs/` for full installation and flight instruction sheets.
 
 ---
 
 ## Configuration
 
-Settings are stored in `flytolearn_config.ini` and persist between sessions. Defaults:
+Settings are stored in `flytolearn_config.ini` inside each plugin folder and persist between sessions. Defaults:
 
 | Setting | Default | Range | Description |
 |---------|---------|-------|-------------|
@@ -113,7 +121,7 @@ Settings are stored in `flytolearn_config.ini` and persist between sessions. Def
 | `payload_weight` | 1.0 | 0.5–2.0 | Multiplier for payload factor |
 | `fuel_weight` | 1.0 | 0.5–2.0 | Multiplier for fuel factor |
 | `time_weight` | 1.0 | 0.5–2.0 | Multiplier for time factor |
-| `min_flight_length` | 2 | minutes | Minimum flight time to count |
+| `min_flight_length` | 2 | minutes | Minimum airborne time before scoring counts |
 | `alpha` | 1.0 | 0.25–1.0 | UI transparency |
 
 ---
@@ -124,11 +132,9 @@ Settings are stored in `flytolearn_config.ini` and persist between sessions. Def
 
 - **X-Plane 12** with SASL 3.16.4 (bundled with plugin)
 - **VSCode** with Lua Language Server extension
-- **DataRefEditor** (free from Laminar Research) — essential for debugging
+- **DataRefEditor** (free from Laminar Research) — essential for debugging datarefs
 
 ### VSCode Configuration
-
-Point your workspace at the plugin modules folder and configure for LuaJIT:
 
 ```json
 {
@@ -136,11 +142,7 @@ Point your workspace at the plugin modules folder and configure for LuaJIT:
 }
 ```
 
-The `api.lua` file in the repo provides SASL function annotations for autocomplete.
-
-### Useful DataRefs
-
-The plugin currently reads these X-Plane datarefs:
+### Key Datarefs
 
 | Dataref | Type | Usage |
 |---------|------|-------|
@@ -153,27 +155,27 @@ The plugin currently reads these X-Plane datarefs:
 | `sim/aircraft/weight/acf_m_empty` | float | Empty weight |
 | `sim/flightmodel2/position/groundspeed` | float | Ground speed |
 | `sim/flightmodel/failures/onground_all` | int | Ground contact |
-| `sim/flightmodel/forces/g_nrml` | float | Normal G-force |
-| `sim/flightmodel/position/vh_ind_fpm` | float | Vertical speed (fpm) |
-
-### Debug Mode
-
-`main.lua` line 29 controls log verbosity:
-```lua
--- sasl.setLogLevel(LOG_DEBUG)  -- development only
-sasl.setLogLevel(LOG_INFO)      -- distribution (current)
-```
+| `sim/flightmodel/forces/g_nrml` | float | Normal G-force (landing quality) |
 
 ---
 
 ## Changelog
 
+### FlyToLearn Competition v1.4.0 — 2026-Mar-10
+- Switched to LFLJ Courchevel production coordinates (from KRNT temp test config)
+- Wrong-runway DQ message updated to reference Rwy 04
+- Packaged as independent `FlyToLearn_Competition` plugin folder
+
+### FlyToLearn Basic v1.3.0 — 2026-Mar-10
+- KBFI → KRNT route established as permanent Basic training route
+- Packaged as independent `FlyToLearn_Basic` plugin folder
+- Wrong-runway DQ message references Rwy 16
+
 ### v1.2.0 — 2026-Mar-08
-- Added landing quality enhancement: G-force monitoring, runway boundary detection, score penalties/disqualification
-- Fixed score screen layout — uniform 45px spacing, landing quality line now visible
-- Fixed landing quality line font size (42 → 32) to prevent text overflow on long DQ messages
-- Shortened wrong-runway DQ message for display fit
-- Fixed critical longitude sign bug in KRNT test coordinates (Western hemisphere = negative)
+- Added landing quality: G-force monitoring, runway boundary detection, score penalties/DQ
+- Fixed score screen layout — uniform spacing, landing quality line now visible
+- Fixed landing quality font size (42 → 32) to prevent text overflow on long DQ messages
+- Fixed critical longitude sign bug in KRNT coordinates (Western hemisphere = negative)
 - Switched log level from LOG_DEBUG to LOG_INFO for distribution
 
 ### v1.1.3 — 2024-Apr-02
@@ -195,33 +197,19 @@ sasl.setLogLevel(LOG_INFO)      -- distribution (current)
 
 ---
 
-## Planned Enhancements
+## Training Scenarios
 
-See [HANDOFF.md](docs/HANDOFF.md) for full implementation details.
+### Basic — KBFI → KRNT (Seattle)
+Boeing Field to Renton Municipal Airport, ~3 nm, flat terrain, default X-Plane 12 demo scenery. Introductory route for new students. Land on Runway 16 (heading south, ~160°), approaching from the north.
 
-### Implemented — In Student Testing: Landing Quality Enhancement
-Coded March 1, 2026. v1.2.0 released March 8, 2026. Currently testing with **KBFI → KRNT** in X-Plane 12 default demo scenery. See [HANDOFF.md](docs/HANDOFF.md) for full details and test plan.
-
-- **G-force monitoring** ✅ — Peak G tracked across full landing roll (not just touchdown instant)
-  - > 2.5G = 5% score penalty (hard landing)
-  - > 3.5G = flight disqualified (crash)
-- **Runway boundary detection** ✅ — Rotated rectangle check against confirmed runway coordinates
-  - Off-runway landing = disqualification
-  - Landing on wrong runway = disqualification with specific message
-- **Score integration** ✅ — Percentage-based deductions applied after base score calculation
-- **Score screen updates** ✅ — Landing quality line added to final score display with colour coding
-
-### Future
-- Extend runway detection to any runway (not just hardcoded Courchevel)
-- Landing quality grades: Butter / Soft / Firm / Hard / Crash
-- Bounce detection
+### Competition — LFHU → LFLJ (French Alps)
+Altiport Huez to Courchevel Altiport, ~25 nm through high Alpine terrain. Requires enhanced LFLJ scenery (free — X-Plane Gateway or x-plane.org). One-way operations enforced: **must land Runway 04 only** (uphill, heading ~044°). Landing on Runway 22 is prohibited and results in immediate disqualification — matches real-world Courchevel operations.
 
 ---
 
-## Training Scenario: LFHU → LFLJ
+## Future Enhancements
 
-The primary training route is Altiport Huez (LFHU) to Courchevel (LFLJ), a challenging mountain flying exercise in the French Alps.
-
-- **Departure:** LFHU — downhill takeoff
-- **Arrival:** LFLJ Runway 04 — mandatory uphill landing (one-way operations)
-- **Tip:** Use X-Plane's **File → Save Flight** to create a reusable starting position at LFHU so students don't have to taxi and turn around each time.
+- Extend runway detection to work with any runway (not just hardcoded coordinates)
+- Landing quality grades: Butter / Soft / Firm / Hard / Crash
+- Bounce detection (track air→ground→air cycles within a short window)
+- Review `flight_start.lua` and `ftl_status.lua` (discovered in X-Plane install, not yet documented)

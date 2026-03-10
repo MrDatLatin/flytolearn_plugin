@@ -2,9 +2,9 @@
 
 This document captures the complete project context, architecture decisions, active work items, and institutional knowledge accumulated during development. It is intended for any developer (human or AI assistant) who needs to understand or continue work on this plugin.
 
-**Last updated:** March 8, 2026
+**Last updated:** March 10, 2026
 **Author:** Tom
-**Current version:** 1.2.0
+**Current versions:** FlyToLearn Basic 1.3.0 / FlyToLearn Competition 1.4.0
 
 ---
 
@@ -571,3 +571,70 @@ Two bugs discovered during live student testing (KBFI → KRNT flight, score sho
 - KRNT student testing underway — DQ and landing quality display confirmed working
 - README.md, HANDOFF.md, MEMORY.md updated for new chat handoff
 - Next: complete remaining KRNT test scenarios, then revert to LFLJ coordinates for production release
+
+---
+
+## Session: March 10, 2026 — Two Independent Plugins + Student Docs (Claude Code)
+
+### Context
+
+Students were still testing v1.2.0 at KBFI → KRNT. A wrong ZIP had been distributed (the Downloads folder had an older build). Version 1.3.0 was created to eliminate confusion between multiple v1.2.0 builds.
+
+A key clarification was made: the earlier "Flight from LFLJ to LFLJ" observation was **not** a `findNavAid()` bug. It was caused by `min_flight_length = 0.1` (6 seconds), which allowed a landing bounce at LFLJ to restart the flight. When the bounced plane briefly went airborne and re-landed at LFLJ, the plugin recorded LFLJ as both departure and arrival. Fix: restore `min_flight_length = 2` in config. No code change needed.
+
+### What Was Done
+
+**Two independent plugins created:**
+
+The project now ships as two self-contained plugins that can each be installed standalone or simultaneously in X-Plane 12. SASL isolates each in its own Lua state — no global variable conflicts.
+
+| Plugin | Version | Route | Landing Runway | DQ Message |
+|--------|---------|-------|----------------|------------|
+| FlyToLearn_Basic | 1.3.0 | KBFI → KRNT | Rwy 16 | "Wrong runway - land on Rwy 16 only" |
+| FlyToLearn_Competition | 1.4.0 | LFHU → LFLJ | Rwy 04 | "Wrong runway - land on Rwy 04 only" |
+
+Only 4 lines differ between them: version number, 2 coordinate pairs, DQ message string.
+
+**Repo changes:**
+- `FlyToLearn_Basic/data/modules/` — full copy of all source files, KRNT coords, v1.3.0
+- `FlyToLearn_Competition/data/modules/` — full copy of all source files, LFLJ coords, v1.4.0
+- Both committed as `4524a6f` — "Add FlyToLearn_Basic (v1.3.0) and FlyToLearn_Competition (v1.4.0) as independent plugins"
+
+**X-Plane installation:**
+- Both plugin folders installed at `X-Plane 12/Resources/plugins/FlyToLearn_Basic/` and `.../FlyToLearn_Competition/`
+- SASL binaries (64/, liblinux/) copied from existing FlyToLearn install into each folder
+
+**Distribution ZIPs (on Desktop):**
+- `FlyToLearn_Basic_v1.3.0.zip` — 15.4 MB, 74 files, extracts to `FlyToLearn_Basic/`
+- `FlyToLearn_Competition_v1.4.0.zip` — 15.4 MB, 74 files, extracts to `FlyToLearn_Competition/`
+- Both exclude `flytolearn_config.ini` so students get clean defaults
+
+**Student HTML documents (all in `docs/` and on Desktop):**
+- `FlyToLearn_Basic_Install_Instructions.html` — fresh install + update steps, file tree, troubleshooting
+- `FlyToLearn_Basic_Flight_Instructions.html` — KBFI→KRNT route, step-by-step, score table, tips
+- `FlyToLearn_Competition_Install_Instructions.html` — scenery setup (Gateway/x-plane.org), install, update
+- `FlyToLearn_Competition_Flight_Instructions.html` — LFHU→LFLJ, one-way ops banner, approach guidance
+
+HTML format matches across all four documents: grid-based step list (28px/1fr), 10pt step font, dark file tree blocks, callout boxes, airport info panels.
+
+**Config fix:** `min_flight_length` manually reset from `0.1` → `2` in `flytolearn_config.ini` in the X-Plane Competition install.
+
+**Commits this session:**
+- `4524a6f` — Add FlyToLearn_Basic and FlyToLearn_Competition as independent plugins
+- `33cf8e8` — Add student flight instruction sheets for Basic and Competition
+- `866c738` — Add installation guides for Basic and Competition plugins
+
+### Current Status
+
+- Both plugins are installed in X-Plane and ready for testing
+- Both ZIPs are on Desktop ready to distribute
+- All four student HTML docs are in `docs/` in the repo
+- KRNT is now the permanent Basic route (v1.3.0), not a temporary test config
+- LFLJ is the permanent Competition route (v1.4.0)
+- `min_flight_length = 2` confirmed correct in Competition config
+
+### Outstanding Items
+
+1. Test both plugins in X-Plane to confirm they load and score independently
+2. Review `flight_start.lua` and `ftl_status.lua` (discovered in install, still not documented)
+3. Known bugs carried forward (see Known Issues section): `xp_gnd_speed2` type mismatch, `score_wieght_time` typo, global variable usage
