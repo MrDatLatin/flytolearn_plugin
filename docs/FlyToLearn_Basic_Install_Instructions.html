@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FlyToLearn Basic — Installation Guide</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 11pt;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 0;
+    }
+
+    /* ── Header Banner ── */
+    .header {
+      background: linear-gradient(135deg, #0d1b2a 0%, #1a3a5c 60%, #0d3b6e 100%);
+      color: #fff;
+      padding: 28px 48px 24px 48px;
+      border-bottom: 4px solid #f0a500;
+    }
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .header h1 {
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      font-size: 26pt;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .header h1 span { color: #f0a500; }
+    .header .subtitle {
+      font-size: 11pt;
+      font-weight: 300;
+      color: #b0c8e8;
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+    }
+    .header .meta {
+      text-align: right;
+      font-size: 9pt;
+      color: #7fa8cc;
+      line-height: 1.8;
+    }
+    .badge {
+      display: inline-block;
+      background: #f0a500;
+      color: #0d1b2a;
+      font-weight: 700;
+      font-size: 8pt;
+      padding: 3px 10px;
+      border-radius: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 8px;
+      margin-right: 6px;
+    }
+
+    /* ── Body ── */
+    .content {
+      padding: 28px 48px 40px 48px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── Section headers ── */
+    h2 {
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #0d3b6e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #f0a500;
+      padding-bottom: 5px;
+      margin: 28px 0 14px 0;
+    }
+    h2:first-of-type { margin-top: 0; }
+
+    p { line-height: 1.6; margin-bottom: 10px; }
+
+    /* ── Callout boxes ── */
+    .callout {
+      border-left: 4px solid #0d3b6e;
+      background: #f0f6ff;
+      padding: 11px 16px;
+      margin: 12px 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 10pt;
+      line-height: 1.6;
+    }
+    .callout.warning  { border-color: #e07b00; background: #fff8ec; }
+    .callout.danger   { border-color: #b00020; background: #fff0f2; }
+    .callout.success  { border-color: #2a7a2a; background: #f0fff0; }
+    .callout strong { display: block; margin-bottom: 3px; }
+
+    /* ── Numbered step list ── */
+    .steps {
+      counter-reset: step-counter;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .steps li {
+      counter-increment: step-counter;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 10px;
+      font-size: 10pt;
+      line-height: 1.6;
+    }
+    .steps li::before {
+      content: counter(step-counter);
+      background: #0d3b6e;
+      color: #fff;
+      font-weight: 700;
+      font-size: 9pt;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .steps li.delete-step::before { background: #b00020; }
+    .steps li > div { display: block; }
+
+    /* ── Code / path text ── */
+    code {
+      background: #eef2f7;
+      border: 1px solid #cdd8e8;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 9.5pt;
+      color: #1a3a5c;
+    }
+
+    /* ── File tree block ── */
+    .filetree {
+      background: #0d1b2a;
+      color: #b0d0f0;
+      border-radius: 6px;
+      padding: 14px 20px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 9pt;
+      line-height: 1.9;
+      margin: 10px 0 6px 0;
+    }
+    .filetree .dir  { color: #f0a500; }
+    .filetree .file { color: #7ecff5; }
+    .filetree .del  { color: #ff6b6b; text-decoration: line-through; }
+    .filetree .note { color: #5a8a6a; }
+
+    /* ── Two-column layout ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: 14px 0;
+    }
+
+    /* ── Requirements table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 10pt;
+    }
+    th {
+      background: #0d3b6e;
+      color: #fff;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 700;
+      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #dde6f0;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    tr:nth-child(even) td { background: #f4f8ff; }
+
+    /* ── Print ── */
+    @media print {
+      body { font-size: 10pt; }
+      .content { padding: 20px 36px 30px 36px; }
+      .header { padding: 20px 36px 18px 36px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>FlyToLearn <span>Basic</span></h1>
+        <div class="subtitle">Installation Guide</div>
+        <div class="badge">v1.3.0 · Boeing Field to Renton</div>
+      </div>
+      <div class="meta">
+        X-Plane 12<br>
+        No Extra Scenery Required<br>
+        Seattle / Puget Sound
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- What Is It -->
+    <h2>What Is FlyToLearn Basic?</h2>
+
+    <p><strong>FlyToLearn Basic</strong> is an X-Plane 12 plugin that scores your training flights automatically. It records your distance, fuel burn, flight time, and landing quality, then displays a score when you come to a full stop. No special scenery is required — the Basic route uses X-Plane 12's built-in demo scenery.</p>
+
+    <div class="callout success">
+      <strong>Training route: KBFI → KRNT</strong>
+      Boeing Field (Seattle) to Renton Municipal Airport — approximately 3 nautical miles. A short, accessible intro flight for new students.
+    </div>
+
+    <!-- Requirements -->
+    <h2>What You Need</h2>
+
+    <table>
+      <thead>
+        <tr><th>Requirement</th><th>Details</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>X-Plane 12</strong></td>
+          <td>Version 12.x — any sub-version. Steam or standalone both work.</td>
+        </tr>
+        <tr>
+          <td><strong>Scenery</strong></td>
+          <td>None required. KBFI and KRNT are included in X-Plane 12's default demo scenery.</td>
+        </tr>
+        <tr>
+          <td><strong>Plugin file</strong></td>
+          <td><code>FlyToLearn_Basic_v1.3.0.zip</code> — provided by your instructor.</td>
+        </tr>
+        <tr>
+          <td><strong>Can both plugins coexist?</strong></td>
+          <td>Yes. FlyToLearn Basic and FlyToLearn Competition can both be installed at the same time — they run independently without conflict.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Fresh Install -->
+    <h2>Fresh Install — New Students</h2>
+
+    <p>If you have never installed FlyToLearn before, follow these steps.</p>
+
+    <ul class="steps">
+      <li><div>Unzip <code>FlyToLearn_Basic_v1.3.0.zip</code>. You will see a folder named <code>FlyToLearn_Basic</code>.</div></li>
+      <li><div>
+        Copy the <code>FlyToLearn_Basic</code> folder into your X-Plane 12 plugins directory:
+        <div class="filetree">
+          <span class="dir">X-Plane 12/</span><br>
+          &nbsp;&nbsp;<span class="dir">Resources/</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">plugins/</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">FlyToLearn_Basic/</span> &nbsp;<span class="note">← place the folder here</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">64/ &nbsp; liblinux/</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">data/modules/</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">main.lua &nbsp; Custom Module/</span>
+        </div>
+        <div class="callout warning" style="margin-top:8px;">
+          <strong>Folder must go directly inside plugins/ — not inside a subfolder.</strong>
+          On Mac the full path is: <code>~/X-Plane 12/Resources/plugins/FlyToLearn_Basic/</code><br>
+          On Windows: <code>C:\X-Plane 12\Resources\plugins\FlyToLearn_Basic\</code>
+        </div>
+      </div></li>
+      <li><div>Launch X-Plane 12. The <strong>FlyToLearn logo bar</strong> will appear at the bottom of the screen once the plugin loads successfully.</div></li>
+      <li><div>Spawn at <strong>KBFI (Boeing Field)</strong> to begin your first flight. See the separate flight instruction sheet for step-by-step flying guidance.</div></li>
+    </ul>
+
+    <!-- Updating -->
+    <h2>Updating from a Previous Version</h2>
+
+    <p>If you have an older FlyToLearn plugin already installed, remove it completely before installing the new version.</p>
+
+    <div class="callout danger">
+      <strong>Delete the old folder before installing — do not overwrite.</strong>
+      Overwriting can leave behind outdated files. A clean install prevents scoring errors.
+    </div>
+
+    <ul class="steps">
+      <li class="delete-step"><div>
+        Quit X-Plane 12 completely.
+      </div></li>
+      <li class="delete-step"><div>
+        Find and delete the old plugin folder from <code>X-Plane 12/Resources/plugins/</code>. It may be named <code>FlyToLearn</code>, <code>FlyToLearn_Basic</code>, or similar:
+        <div class="filetree">
+          <span class="dir">X-Plane 12/Resources/plugins/</span><br>
+          &nbsp;&nbsp;<span class="del">FlyToLearn/</span> &nbsp;<span class="note">← delete if present</span><br>
+          &nbsp;&nbsp;<span class="del">FlyToLearn_Basic/</span> &nbsp;<span class="note">← delete if present</span>
+        </div>
+      </div></li>
+      <li><div>Follow the <strong>Fresh Install</strong> steps above to install v1.3.0.</div></li>
+    </ul>
+
+    <div class="callout">
+      <strong>Note on settings:</strong>
+      Your previous scoring weights and preferences will reset to defaults when the old folder is deleted. This is intentional — it ensures the minimum flight time and other parameters are correct for v1.3.0.
+    </div>
+
+    <!-- After Launch -->
+    <h2>After Launch — What to Expect</h2>
+
+    <div class="two-col">
+      <div>
+        <div class="callout success">
+          <strong>Logo bar at the bottom</strong>
+          The FlyToLearn logo appears as a thin bar along the bottom edge of the X-Plane window. Click it to open the start panel.
+        </div>
+        <div class="callout success">
+          <strong>Start panel shows the route</strong>
+          The start panel will display <strong>KBFI → KRNT</strong>. Click Start when you are ready on the runway at KBFI.
+        </div>
+      </div>
+      <div>
+        <div class="callout success">
+          <strong>Score screen on landing</strong>
+          After coming to a full stop at KRNT, the score screen appears automatically with your result and landing quality.
+        </div>
+        <div class="callout warning">
+          <strong>Sim speed locked at 1×</strong>
+          The plugin disables time acceleration during the scored flight. You cannot fast-forward.
+        </div>
+      </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <h2>Troubleshooting</h2>
+
+    <table>
+      <thead>
+        <tr><th>Problem</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Logo bar not visible after loading</td>
+          <td>Check <strong>Plugins → FlyToLearn_Basic</strong> in the X-Plane menu bar to toggle the window on</td>
+        </tr>
+        <tr>
+          <td>Score is always zero or "DISQUALIFIED"</td>
+          <td>Delete the old <code>FlyToLearn</code> plugin folder completely, then reinstall fresh per the steps above</td>
+        </tr>
+        <tr>
+          <td>Start panel shows wrong route</td>
+          <td>Make sure you are using the <code>FlyToLearn_Basic</code> folder, not an older FlyToLearn install. Both can coexist but must be separate folders.</td>
+        </tr>
+        <tr>
+          <td>No score appears after stopping</td>
+          <td>You must be airborne for at least 2 minutes before landing counts. Fly the full route from KBFI to KRNT.</td>
+        </tr>
+        <tr>
+          <td>Plugin not loading at all</td>
+          <td>Confirm the <code>FlyToLearn_Basic</code> folder sits directly inside <code>Resources/plugins/</code> — not nested inside another subfolder. Check <code>X-Plane 12/Log.txt</code> for plugin errors.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+</body>
+</html>
