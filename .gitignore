@@ -8,6 +8,15 @@ data/modules/Custom Module/flytolearn_config.ini
 data/output/SASLLog.txt
 data/modules/state.txt
 
+# SASL runtime preferences (auto-generated, differ per install)
+**/data/modules/configuration/
+
+# Old combined plugin folder (pre-split, not distributed)
+FlyToLearn/
+
+# Debug screenshots and logs
+Debugs/
+
 # Editor
 .vscode/
 *.swp

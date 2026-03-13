@@ -164,45 +164,6 @@
     .filetree .del  { color: #ff6b6b; text-decoration: line-through; }
     .filetree .note { color: #5a8a6a; }
 
-    /* ── Scenery option boxes ── */
-    .option-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 14px 0;
-    }
-    .option-box {
-      border: 1px solid #cdd8e8;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    .option-box .opt-head {
-      background: #0d3b6e;
-      color: #fff;
-      padding: 8px 14px;
-      font-weight: 700;
-      font-family: 'Roboto Condensed', Arial Narrow, sans-serif;
-      font-size: 10pt;
-      letter-spacing: 0.3px;
-    }
-    .option-box .opt-head .tag {
-      float: right;
-      background: #f0a500;
-      color: #0d1b2a;
-      font-size: 7.5pt;
-      padding: 1px 7px;
-      border-radius: 8px;
-      margin-top: 1px;
-    }
-    .option-box .opt-head .tag.free { background: #2a7a2a; color: #fff; }
-    .option-box .opt-body {
-      padding: 12px 14px;
-      font-size: 10pt;
-      line-height: 1.7;
-      background: #f9fbff;
-    }
-    .option-box a { color: #0d3b6e; }
-
     /* ── Two-column layout ── */
     .two-col {
       display: grid;
@@ -249,7 +210,7 @@
       <div>
         <h1>FlyToLearn <span>Competition</span></h1>
         <div class="subtitle">Installation Guide</div>
-        <div class="badge">v1.4.0 · Alpe d'Huez to Courchevel</div>
+        <div class="badge">v1.4.2 · Alpe d'Huez to Courchevel</div>
       </div>
       <div class="meta">
         X-Plane 12<br>
@@ -267,13 +228,15 @@
     <p><strong>FlyToLearn Competition</strong> is an advanced X-Plane 12 plugin that scores your training flights through the French Alps. It records distance, fuel burn, flight time, and landing quality, then displays a scored result when you stop. This is the competition-grade version of FlyToLearn, designed for the GAMA Challenge route.</p>
 
     <div class="callout success">
-      <strong>Training route: LFHU → LFLJ</strong>
+      <strong>Competition route: LFHU → LFLJ</strong>
       Altiport Huez (Alpe d'Huez) to Courchevel Altiport — approximately 25 nautical miles through high Alpine terrain. You must land on Runway 04 at Courchevel. This is the only permitted landing direction.
     </div>
 
     <div class="callout warning">
-      <strong>Custom scenery is required for this plugin.</strong>
-      Courchevel (LFLJ) enhanced scenery must be installed before flying the competition route. Step 1 below covers two free options.
+      <strong>This guide has three parts — complete all three in order.</strong>
+      1. Authenticate X-Plane 12 with your XDD product key &nbsp;→&nbsp;
+      2. Download the Western Europe scenery &nbsp;→&nbsp;
+      3. Install the FlyToLearn Competition plugin.
     </div>
 
     <!-- Requirements -->
@@ -286,19 +249,15 @@
       <tbody>
         <tr>
           <td><strong>X-Plane 12</strong></td>
-          <td>Version 12.x — any sub-version. Steam or standalone both work.</td>
+          <td>Version 12.x, installed on your school computer using the <strong>X-Plane Digital Download (XDD)</strong> license. See Step 1 below if prompted to authenticate.</td>
         </tr>
         <tr>
-          <td><strong>LFLJ Scenery</strong></td>
-          <td>Enhanced Courchevel scenery — required. Two free options are covered in Step 1.</td>
-        </tr>
-        <tr>
-          <td><strong>LFHU Scenery</strong></td>
-          <td>Altiport Huez is included in the X-Plane 12 default airport database — no extra download needed.</td>
+          <td><strong>Western Europe scenery</strong></td>
+          <td>Required for Courchevel (LFLJ) and Alpe d'Huez (LFHU). Downloaded through X-Plane's built-in scenery installer using your XDD product key. See Step 2 below.</td>
         </tr>
         <tr>
           <td><strong>Plugin file</strong></td>
-          <td><code>FlyToLearn_Competition_v1.4.0.zip</code> — provided by your instructor.</td>
+          <td><code>FlyToLearn_Competition_v1.4.2.zip</code> — provided by your instructor.</td>
         </tr>
         <tr>
           <td><strong>Can both plugins coexist?</strong></td>
@@ -307,47 +266,54 @@
       </tbody>
     </table>
 
-    <!-- Step 1: Scenery -->
-    <h2>Step 1 — Install Courchevel (LFLJ) Scenery</h2>
+    <!-- Step 1: XDD Authentication -->
+    <h2>Step 1 — Launch X-Plane 12 &amp; Authenticate</h2>
 
-    <p>X-Plane 12 ships with a minimal version of LFLJ. An enhanced scenery pack gives you a much better representation of the runway and surrounding terrain. Two free options are available — you only need one.</p>
+    <p>X-Plane 12 is pre-installed on your school computer. The first time you launch it, X-Plane may ask how you want to authenticate. Use the steps below to ensure you select the correct option.</p>
 
-    <div class="option-grid">
-      <div class="option-box">
-        <div class="opt-head">Option A — X-Plane Scenery Gateway <span class="tag free">Free · No Registration</span></div>
-        <div class="opt-body">
-          The official X-Plane airport database includes an X-Plane 12 approved version of LFLJ, downloadable with no account required.<br><br>
-          Visit:<br>
-          <strong>gateway.x-plane.com/airports/LFLJ</strong><br><br>
-          Download the latest approved pack, unzip it, and place the folder in:<br>
-          <code>X-Plane 12/Custom Scenery/</code>
-        </div>
-      </div>
-      <div class="option-box">
-        <div class="opt-head">Option B — X-Plane.org Freeware <span class="tag">Free · Free Account</span></div>
-        <div class="opt-body">
-          A community-enhanced version is available on the X-Plane.org forum. Requires creating a free account to download.<br><br>
-          Search for:<br>
-          <strong>"LFLJ Courchevel refresh nuke155"</strong><br>
-          at <strong>forums.x-plane.org</strong><br><br>
-          Unzip and place the folder in:<br>
-          <code>X-Plane 12/Custom Scenery/</code>
-        </div>
-      </div>
+    <div class="callout warning">
+      <strong>Important: Choose "I have an XDD or DVD" — not X-Plane Identity</strong>
+      Your school uses X-Plane Digital Download (XDD) licensing. Do <em>not</em> create or sign in with a personal X-Plane Identity account. Your instructor will provide the product key.
     </div>
+
+    <ul class="steps">
+      <li><div>Launch X-Plane 12. If this is the first time on this computer, an authentication screen will appear.</div></li>
+      <li><div>Select <strong>"I have an XDD or DVD"</strong> (X-Plane Digital Download). <em>Do not</em> click "X-Plane Identity" or sign in with an online account.</div></li>
+      <li><div>Enter the <strong>product key</strong> provided by your instructor when prompted, then click Continue.</div></li>
+      <li><div>X-Plane 12 will validate the key and proceed. Continue to Step 2 to download the required scenery.</div></li>
+    </ul>
 
     <div class="callout">
-      <strong>Not sure which to pick?</strong>
-      Option A (Gateway) requires no account and is the quickest. Either scenery version works fine — the plugin only needs the runway to be present at the correct coordinates.
+      <strong>Already authenticated?</strong>
+      If X-Plane 12 opens directly to the main screen without asking for a key, your computer is already set up correctly. Skip ahead to Step 2.
     </div>
 
-    <!-- Step 2: Fresh Install -->
-    <h2>Step 2 — Install the Plugin</h2>
+    <!-- Step 2: Scenery -->
+    <h2>Step 2 — Download Western Europe Scenery</h2>
+
+    <p>The competition route flies through the French Alps. X-Plane 12 includes a built-in scenery installer — you will use it to download the Western Europe region, which includes both LFHU (Alpe d'Huez) and LFLJ (Courchevel).</p>
+
+    <div class="callout warning">
+      <strong>Ask your instructor for help with this step if you are unsure.</strong>
+      The scenery download requires the same XDD product key used in Step 1. Do not sign in with X-Plane Identity.
+    </div>
+
+    <ul class="steps">
+      <li><div>From the X-Plane 12 main screen, navigate to the airport selector and search for <strong>LFHU</strong> or <strong>LFLJ</strong>.</div></li>
+      <li><div>If the scenery for this region has not been downloaded yet, X-Plane will display a prompt offering to install it. Click to proceed.</div></li>
+      <li><div>If X-Plane asks you to authenticate again, select <strong>"I have an XDD or DVD"</strong> and enter your product key. Do <em>not</em> use X-Plane Identity.</div></li>
+      <li><div>When prompted to choose a scenery region, select <strong>Western Europe</strong>. This region includes France and the Alps airports used in this course.</div></li>
+      <li><div>Allow the download to complete. Depending on your internet connection this may take several minutes. Do not close X-Plane during the download.</div></li>
+      <li><div>Once the download finishes, X-Plane will confirm the scenery is ready. You can now proceed to Step 3.</div></li>
+    </ul>
+
+    <!-- Step 3: Plugin Install -->
+    <h2>Step 3 — Install the Plugin</h2>
 
     <p>If you have never installed FlyToLearn Competition before, follow these steps.</p>
 
     <ul class="steps">
-      <li><div>Unzip <code>FlyToLearn_Competition_v1.4.0.zip</code>. You will see a folder named <code>FlyToLearn_Competition</code>.</div></li>
+      <li><div>Unzip <code>FlyToLearn_Competition_v1.4.2.zip</code>. You will see a folder named <code>FlyToLearn_Competition</code>.</div></li>
       <li><div>
         Copy the <code>FlyToLearn_Competition</code> folder into your X-Plane 12 plugins directory:
         <div class="filetree">
@@ -390,12 +356,12 @@
         </div>
         Deleting the folder also removes any stored config file inside it — no separate config deletion needed.
       </div></li>
-      <li><div>Follow <strong>Step 2 — Install the Plugin</strong> above to install v1.4.0 fresh.</div></li>
+      <li><div>Follow <strong>Step 3 — Install the Plugin</strong> above to install v1.4.2 fresh.</div></li>
     </ul>
 
     <div class="callout">
       <strong>Note on settings:</strong>
-      Your previous scoring weights and preferences reset to defaults when the old folder is deleted. This is intentional — it ensures the 2-minute minimum flight time and all other parameters are correct for v1.4.0.
+      Your previous scoring weights and preferences reset to defaults when the old folder is deleted. This is intentional — it ensures the 2-minute minimum flight time and all other parameters are correct for v1.4.2.
     </div>
 
     <!-- After Launch -->
@@ -434,7 +400,7 @@
       <tbody>
         <tr>
           <td>Logo bar not visible after loading</td>
-          <td>Check <strong>Plugins → FlyToLearn_Competition</strong> in the X-Plane menu bar to toggle the window on</td>
+          <td>Check <strong>Plugins → FlyToLearn Competition → Show FlyToLearn Competition</strong> in the X-Plane menu bar to toggle the window on</td>
         </tr>
         <tr>
           <td>Score is always zero or "DISQUALIFIED"</td>
@@ -449,12 +415,16 @@
           <td>You must be airborne for at least 2 minutes before landing counts. Fly the full LFHU → LFLJ route without landing early.</td>
         </tr>
         <tr>
-          <td>Courchevel runway looks basic / missing</td>
-          <td>Enhanced LFLJ scenery is not installed. Follow Step 1 to download and install it into <code>X-Plane 12/Custom Scenery/</code>.</td>
+          <td>Courchevel airport looks basic or is missing</td>
+          <td>Western Europe scenery may not be installed. Return to Step 2 and use X-Plane's built-in scenery installer to download the Western Europe region. Ask your instructor for help.</td>
         </tr>
         <tr>
           <td>Plugin not loading at all</td>
           <td>Confirm the <code>FlyToLearn_Competition</code> folder sits directly inside <code>Resources/plugins/</code> — not nested inside another subfolder. Check <code>X-Plane 12/Log.txt</code> for plugin errors.</td>
+        </tr>
+        <tr>
+          <td>X-Plane asks me to sign in or authenticate</td>
+          <td>Select <strong>"I have an XDD or DVD"</strong> and enter the product key provided by your instructor. Do not create a personal X-Plane Identity account.</td>
         </tr>
       </tbody>
     </table>

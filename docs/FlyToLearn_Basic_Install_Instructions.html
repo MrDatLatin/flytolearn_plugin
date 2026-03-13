@@ -210,7 +210,7 @@
       <div>
         <h1>FlyToLearn <span>Basic</span></h1>
         <div class="subtitle">Installation Guide</div>
-        <div class="badge">v1.3.0 · Boeing Field to Renton</div>
+        <div class="badge">v1.3.2 · Boeing Field to Renton</div>
       </div>
       <div class="meta">
         X-Plane 12<br>
@@ -225,7 +225,7 @@
     <!-- What Is It -->
     <h2>What Is FlyToLearn Basic?</h2>
 
-    <p><strong>FlyToLearn Basic</strong> is an X-Plane 12 plugin that scores your training flights automatically. It records your distance, fuel burn, flight time, and landing quality, then displays a score when you come to a full stop. No special scenery is required — the Basic route uses X-Plane 12's built-in demo scenery.</p>
+    <p><strong>FlyToLearn Basic</strong> is an X-Plane 12 plugin that scores your training flights automatically. It records your distance, fuel burn, flight time, and landing quality, then displays a score when you come to a full stop. No special scenery is required — the Basic route uses X-Plane 12's built-in default scenery.</p>
 
     <div class="callout success">
       <strong>Training route: KBFI → KRNT</strong>
@@ -242,15 +242,15 @@
       <tbody>
         <tr>
           <td><strong>X-Plane 12</strong></td>
-          <td>Version 12.x — any sub-version. Steam or standalone both work.</td>
+          <td>Version 12.x, installed on your school computer using the <strong>X-Plane Digital Download (XDD)</strong> license. See the licensing section below if you are prompted to authenticate when first launching X-Plane 12.</td>
         </tr>
         <tr>
           <td><strong>Scenery</strong></td>
-          <td>None required. KBFI and KRNT are included in X-Plane 12's default demo scenery.</td>
+          <td>None required. KBFI and KRNT are included in X-Plane 12's default scenery.</td>
         </tr>
         <tr>
           <td><strong>Plugin file</strong></td>
-          <td><code>FlyToLearn_Basic_v1.3.0.zip</code> — provided by your instructor.</td>
+          <td><code>FlyToLearn_Basic_v1.3.2.zip</code> — provided by your instructor.</td>
         </tr>
         <tr>
           <td><strong>Can both plugins coexist?</strong></td>
@@ -259,13 +259,35 @@
       </tbody>
     </table>
 
+    <!-- XDD Authentication -->
+    <h2>First-Time X-Plane 12 Launch — Licensing</h2>
+
+    <p>X-Plane 12 is pre-installed on your school computer. The first time you launch it, X-Plane may ask how you want to authenticate. Use the steps below to ensure you select the correct option.</p>
+
+    <div class="callout warning">
+      <strong>Important: Choose "I have an XDD or DVD" — not X-Plane Identity</strong>
+      Your school uses X-Plane Digital Download (XDD) licensing. Do <em>not</em> create or sign in with a personal X-Plane Identity account. Your instructor will provide the product key if needed.
+    </div>
+
+    <ul class="steps">
+      <li><div>Launch X-Plane 12. If this is the first time on this computer, an authentication screen will appear.</div></li>
+      <li><div>Select <strong>"I have an XDD or DVD"</strong> (X-Plane Digital Download). <em>Do not</em> click "X-Plane Identity" or sign in with an online account.</div></li>
+      <li><div>Enter the <strong>product key</strong> provided by your instructor when prompted, then click Continue.</div></li>
+      <li><div>X-Plane 12 will validate the key and proceed to the main screen. You are now ready to install the FlyToLearn plugin.</div></li>
+    </ul>
+
+    <div class="callout">
+      <strong>Already authenticated?</strong>
+      If X-Plane 12 opens directly to the main screen without asking for a key, your computer is already set up correctly. Skip to the Fresh Install section below.
+    </div>
+
     <!-- Fresh Install -->
     <h2>Fresh Install — New Students</h2>
 
     <p>If you have never installed FlyToLearn before, follow these steps.</p>
 
     <ul class="steps">
-      <li><div>Unzip <code>FlyToLearn_Basic_v1.3.0.zip</code>. You will see a folder named <code>FlyToLearn_Basic</code>.</div></li>
+      <li><div>Unzip <code>FlyToLearn_Basic_v1.3.2.zip</code>. You will see a folder named <code>FlyToLearn_Basic</code>.</div></li>
       <li><div>
         Copy the <code>FlyToLearn_Basic</code> folder into your X-Plane 12 plugins directory:
         <div class="filetree">
@@ -309,12 +331,12 @@
           &nbsp;&nbsp;<span class="del">FlyToLearn_Basic/</span> &nbsp;<span class="note">← delete if present</span>
         </div>
       </div></li>
-      <li><div>Follow the <strong>Fresh Install</strong> steps above to install v1.3.0.</div></li>
+      <li><div>Follow the <strong>Fresh Install</strong> steps above to install v1.3.2.</div></li>
     </ul>
 
     <div class="callout">
       <strong>Note on settings:</strong>
-      Your previous scoring weights and preferences will reset to defaults when the old folder is deleted. This is intentional — it ensures the minimum flight time and other parameters are correct for v1.3.0.
+      Your previous scoring weights and preferences will reset to defaults when the old folder is deleted. This is intentional — it ensures the minimum flight time and other parameters are correct for v1.3.2.
     </div>
 
     <!-- After Launch -->
@@ -353,7 +375,7 @@
       <tbody>
         <tr>
           <td>Logo bar not visible after loading</td>
-          <td>Check <strong>Plugins → FlyToLearn_Basic</strong> in the X-Plane menu bar to toggle the window on</td>
+          <td>Check <strong>Plugins → FlyToLearn Basic → Show FlyToLearn Basic</strong> in the X-Plane menu bar to toggle the window on</td>
         </tr>
         <tr>
           <td>Score is always zero or "DISQUALIFIED"</td>
@@ -370,6 +392,10 @@
         <tr>
           <td>Plugin not loading at all</td>
           <td>Confirm the <code>FlyToLearn_Basic</code> folder sits directly inside <code>Resources/plugins/</code> — not nested inside another subfolder. Check <code>X-Plane 12/Log.txt</code> for plugin errors.</td>
+        </tr>
+        <tr>
+          <td>X-Plane asks me to sign in or authenticate</td>
+          <td>Select <strong>"I have an XDD or DVD"</strong> and enter the product key provided by your instructor. Do not create a personal X-Plane Identity account.</td>
         </tr>
       </tbody>
     </table>

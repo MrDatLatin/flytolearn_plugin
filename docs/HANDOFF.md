@@ -2,9 +2,9 @@
 
 This document captures the complete project context, architecture decisions, active work items, and institutional knowledge accumulated during development. It is intended for any developer (human or AI assistant) who needs to understand or continue work on this plugin.
 
-**Last updated:** March 10, 2026
+**Last updated:** March 11, 2026
 **Author:** Tom
-**Current versions:** FlyToLearn Basic 1.3.0 / FlyToLearn Competition 1.4.0
+**Current versions:** FlyToLearn Basic 1.3.2 / FlyToLearn Competition 1.4.2
 
 ---
 
@@ -91,11 +91,11 @@ The flight phase drives all behavior:
 FTL_PHASE_LIMBO (0)
     ↓ user clicks "Start"
 FTL_PHASE_DEPARTING (1)  — finds departure airport, waits for wheels-off
-    ↓ on_ground becomes false
-FTL_PHASE_INFLIGHT (2)   — records start values, forces sim speed to 1x
+    ↓ on_ground becomes false AND groundspeed ≥ 20 m/s
+FTL_PHASE_INFLIGHT (2)   — records start values (including takeoff lat/lon), forces sim speed to 1x
     ↓ on_ground becomes true AND min flight time met
 FTL_PHASE_LANDED (3)     — calculates score, finds arrival airport, writes log
-    ↓ ground_speed ≤ 0.01
+    ↓ ground_speed ≤ 0.01 (records landing stop lat/lon)
 FTL_PHASE_ENDED (4)      — shows score popup
 ```
 
@@ -638,3 +638,86 @@ HTML format matches across all four documents: grid-based step list (28px/1fr), 
 1. Test both plugins in X-Plane to confirm they load and score independently
 2. Review `flight_start.lua` and `ftl_status.lua` (discovered in install, still not documented)
 3. Known bugs carried forward (see Known Issues section): `xp_gnd_speed2` type mismatch, `score_wieght_time` typo, global variable usage
+
+---
+
+## Session: March 11, 2026 — False Liftoff Fix + Position Tracking + Install Instructions Rewrite (Claude Code)
+
+### What Was Done
+
+**Bug fix — False "en route" status at LFHU (and any terrain-complex airport):**
+
+At mountain airports like LFHU, the `sim/flightmodel/failures/onground_all` dataref returns 0 (not on ground) while the aircraft is sitting stationary on the runway. This caused the plugin to immediately advance from DEPARTING to INFLIGHT the moment the student clicked Start, showing "en route" before takeoff and potentially corrupting the score.
+
+Fix: Added a minimum groundspeed guard to the DEPARTING→INFLIGHT transition in `flytolearn.lua`:
+
+```lua
+local TAKEOFF_MIN_SPEED_MS = 20  -- ~39 knots
+
+-- Both conditions must be true for liftoff to be confirmed:
+if not on_ground and xpspeed >= TAKEOFF_MIN_SPEED_MS then
+    flight_phase = FTL_PHASE_INFLIGHT
+    ...
+end
+```
+
+A stationary aircraft can never exceed 20 m/s regardless of what `onground_all` reports, so this reliably prevents false triggers. The same fix applies to both plugins.
+
+**Position recording added to flight log:**
+
+User requested that the plugin record where takeoff begins/ends and landing begins/ends. Added three position pairs to the flight summary `.info` file:
+
+| Variable | When recorded |
+|----------|---------------|
+| `takeoff_lat` / `takeoff_lon` | At liftoff (DEPARTING→INFLIGHT transition) |
+| `touchdown_lat` / `touchdown_lon` | At first ground contact (INFLIGHT→LANDED transition — was already recorded) |
+| `landing_stop_lat` / `landing_stop_lon` | When aircraft fully stops (LANDED→ENDED transition, groundspeed ≤ 0.01) |
+
+All three pairs are written to a "Position Data" section in the `.info` log file.
+
+**Version bumps:**
+- FlyToLearn Basic: 1.3.1 → **1.3.2**
+- FlyToLearn Competition: 1.4.1 → **1.4.2**
+
+**Distribution ZIPs rebuilt on Desktop:**
+- `FlyToLearn_Basic_v1.3.2.zip`
+- `FlyToLearn_Competition_v1.4.2.zip`
+
+Both confirmed to include all SASL framework directories (`data/init/`, `data/api/`, `data/components/`, `data/output/`).
+
+**Install instructions rewritten:**
+
+Both HTML install guides (`docs/FlyToLearn_Basic_Install_Instructions.html` and `docs/FlyToLearn_Competition_Install_Instructions.html`) were rewritten to reflect the school's actual setup:
+
+*Basic install instructions:*
+- Added "First-Time X-Plane 12 Launch — Licensing" section: students must select **"I have an XDD or DVD"** (not "X-Plane Identity") when prompted
+- "Already authenticated? Skip to Fresh Install" callout added
+- Updated ZIP filename references to v1.3.2
+- Removed all mentions of Steam, x-plane.org, and scenery gateway
+
+*Competition install instructions:*
+- Same XDD authentication section added (Step 1)
+- Scenery installation section completely rewritten (Step 2): uses X-Plane's **built-in scenery downloader** — search for airport → prompted to install → authenticate with XDD product key → select **Western Europe** region. No x-plane.org or gateway mentions.
+- "Training route" → "**Competition route**" in the green callout box
+- Updated ZIP filename references to v1.4.2
+
+### Files Modified This Session
+
+| File | Change |
+|------|--------|
+| `FlyToLearn_Basic/data/modules/Custom Module/flytolearn.lua` | Speed threshold + position tracking |
+| `FlyToLearn_Competition/data/modules/Custom Module/flytolearn.lua` | Same changes |
+| `FlyToLearn_Basic/data/modules/main.lua` | Version 1.3.1 → 1.3.2 |
+| `FlyToLearn_Competition/data/modules/main.lua` | Version 1.4.1 → 1.4.2 |
+| `docs/FlyToLearn_Basic_Install_Instructions.html` | XDD auth section, v1.3.2 |
+| `docs/FlyToLearn_Competition_Install_Instructions.html` | XDD auth + scenery rewrite, "Competition route", v1.4.2 |
+| `README.md` | Version numbers, ZIP names, changelog, scenery note |
+| `docs/HANDOFF.md` | This session added |
+| `CLAUDE.md` | Version and status updated |
+
+### Outstanding Items
+
+1. Test v1.3.2 and v1.4.2 in X-Plane to confirm liftoff fix works at LFHU
+2. Verify position data appears correctly in `.info` log files
+3. Review `flight_start.lua` and `ftl_status.lua` (discovered in install, still not documented)
+4. Known bugs carried forward: `xp_gnd_speed2` type mismatch, `score_wieght_time` typo, global variable usage

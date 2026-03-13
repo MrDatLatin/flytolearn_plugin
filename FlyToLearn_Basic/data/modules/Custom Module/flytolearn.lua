@@ -37,10 +37,16 @@ RWY_WIDTH_M = 18
 -- Landing quality tracking
 peak_gforce = 0
 base_score = 0
-touchdown_lat, touchdown_lon = 0, 0
+takeoff_lat, takeoff_lon = 0, 0            -- position at liftoff
+touchdown_lat, touchdown_lon = 0, 0        -- position at first ground contact
+landing_stop_lat, landing_stop_lon = 0, 0  -- position where aircraft came to a stop
 landing_dq = false
 landing_dq_reason = ""
 landing_penalty_pct = 0
+
+-- Takeoff detection: minimum ground speed (m/s) before liftoff is confirmed.
+-- Prevents false "airborne" reading at airports with terrain mesh issues (e.g. LFHU).
+local TAKEOFF_MIN_SPEED_MS = 20  -- ~39 knots
 
 
 
@@ -203,10 +209,12 @@ function settings.ftl_logo.doMouseUp (button, parentX, parentY, button_name, cid
         c.start_airport.icao , c.start_airport.name , c.start_airport.inCurDSF = findAirport(get(xp_lat), get(xp_lon))
         flight_phase = FTL_PHASE_DEPARTING
         start_popup:setIsVisible(false)
-        -- Reset landing quality state for new flight
+        -- Reset flight tracking state for new flight
         peak_gforce = 0
         base_score = 0
+        takeoff_lat, takeoff_lon = 0, 0
         touchdown_lat, touchdown_lon = 0, 0
+        landing_stop_lat, landing_stop_lon = 0, 0
         landing_dq = false
         landing_dq_reason = ""
         landing_penalty_pct = 0
@@ -475,16 +483,16 @@ inflight_popup = contextWindow {
   function show_flytolearn ()
     if ftl_logo_frame:isVisible () then
         ftl_logo_frame:setIsVisible (false)
-        sasl.setMenuItemName(flytolearn_menu, flytolearn_startitem, "Show Fly To Learn")
+        sasl.setMenuItemName(flytolearn_menu, flytolearn_startitem, "Show FlyToLearn Basic")
     else
         ftl_logo_frame:setIsVisible (true)
-        sasl.setMenuItemName(flytolearn_menu, flytolearn_startitem, "Hide Fly To Learn")
+        sasl.setMenuItemName(flytolearn_menu, flytolearn_startitem, "Hide FlyToLearn Basic")
     end
 end
 
-flytolearn_menuitem = appendMenuItem (PLUGINS_MENU_ID, "Fly To Learn")
+flytolearn_menuitem = appendMenuItem (PLUGINS_MENU_ID, "FlyToLearn Basic")
 flytolearn_menu = createMenu ("", PLUGINS_MENU_ID, flytolearn_menuitem)
-flytolearn_startitem = appendMenuItem (flytolearn_menu, "Show Fly To Learn", show_flytolearn)
+flytolearn_startitem = appendMenuItem (flytolearn_menu, "Show FlyToLearn Basic", show_flytolearn)
 
 function write_flight_info ()
     flight_log_name = sasl.getXPlanePath () .. "flytolearn_summary_"..os.date("%Y_%b_%d_%H_%M_%S")..".info"
@@ -496,6 +504,11 @@ function write_flight_info ()
     table.insert(tLines, "Time: "..flight_summary.time)
     table.insert(tLines, "Departure Airport: ".. flight_summary.departure)
     table.insert(tLines, "Arrival Airport: ".. flight_summary.arrival)
+    table.insert(tLines, "-----------------------------")
+    table.insert(tLines, "Position Data")
+    table.insert(tLines, "Takeoff (liftoff) lat/lon: ".. flight_summary.takeoff_lat ..", ".. flight_summary.takeoff_lon)
+    table.insert(tLines, "Touchdown lat/lon: ".. flight_summary.touchdown_lat ..", ".. flight_summary.touchdown_lon)
+    table.insert(tLines, "Landing stop lat/lon: ".. flight_summary.landing_stop_lat ..", ".. flight_summary.landing_stop_lon)
     table.insert(tLines, "-----------------------------")
     table.insert(tLines, "X-Plane Raw Data")
     table.insert(tLines, "Flight distance (meters): " .. flight_summary.xp_dist_in_m)
@@ -569,13 +582,15 @@ function update ()
     end
     if flight_phase == FTL_PHASE_DEPARTING then
         force_sim_speed_to_one ()
-        if not on_ground then
+        -- Require minimum speed to confirm actual liftoff (prevents false trigger at terrain-complex airports)
+        if not on_ground and xpspeed >= TAKEOFF_MIN_SPEED_MS then
             flight_phase = FTL_PHASE_INFLIGHT
+            takeoff_lat = get(xp_lat)   -- record liftoff position
+            takeoff_lon = get(xp_lon)
             start_time = xptime -- in seconds
             start_fuel = xpfuel -- in kgs
             start_dist = xpdist -- in meters
             payload_wt = get(xp_total_weight) - get(xp_empty_weight) - get(xp_fuel_weight) -- in kgs
-
         end
     elseif flight_phase == FTL_PHASE_INFLIGHT and on_ground then
         if xptime - start_time >= (settings.min_flight_length * 60) then -- JJB 2024-03-23: added min flight length
@@ -618,11 +633,19 @@ function update ()
             flight_summary.score_weight_time = string.format ("%.1f", settings.time_weight)
             flight_summary.score_weight_fuel = string.format ("%.1f", settings.fuel_weight)
             flight_summary.final_score = string.format ("%.2f", final_score) .. " points"
+            flight_summary.takeoff_lat   = string.format("%.6f", takeoff_lat)
+            flight_summary.takeoff_lon   = string.format("%.6f", takeoff_lon)
+            flight_summary.touchdown_lat = string.format("%.6f", touchdown_lat)
+            flight_summary.touchdown_lon = string.format("%.6f", touchdown_lon)
             -- write_flight_info() moved to LANDED→ENDED so peak G and penalties are included
         else  -- JJB 2024-03-23: added min flight length
             flight_phase = FTL_PHASE_DEPARTING -- JJB 2024-03-23: added min flight length
         end -- JJB 2024-03-23: added min flight length
     elseif flight_phase == FTL_PHASE_LANDED and get(xp_ground_speed) <= 0.01 then
+        landing_stop_lat = get(xp_lat)   -- record where aircraft came to a full stop
+        landing_stop_lon = get(xp_lon)
+        flight_summary.landing_stop_lat = string.format("%.6f", landing_stop_lat)
+        flight_summary.landing_stop_lon = string.format("%.6f", landing_stop_lon)
         -- Apply landing quality checks
         landing_dq, landing_dq_reason = check_disqualification()
         landing_penalty_pct = calculate_landing_penalties()

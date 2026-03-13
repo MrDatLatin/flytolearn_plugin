@@ -7,7 +7,7 @@ This file provides context for Claude Code (or any Claude instance) working on t
 - **Name:** FlyToLearn Aviation Challenge
 - **Type:** SASL 3.16.4 plugin for X-Plane 12
 - **Language:** Lua (LuaJIT / Lua 5.1 compatible)
-- **Version:** 1.1.3
+- **Versions:** FlyToLearn Basic 1.3.2 / FlyToLearn Competition 1.4.2
 - **Author:** Tom
 - **License:** MIT
 - **Purpose:** Educational flight scoring system for student pilot training
@@ -15,9 +15,9 @@ This file provides context for Claude Code (or any Claude instance) working on t
 ## Development Environment
 
 - **Editor:** VSCode with Lua Language Server (set to LuaJIT runtime)
-- **Testing:** Run X-Plane 12 with the plugin installed in `Resources/plugins/FlyToLearn/`
+- **Testing:** Run X-Plane 12 with plugins installed in `Resources/plugins/FlyToLearn_Basic/` and `Resources/plugins/FlyToLearn_Competition/`
 - **Debugging:** DataRefEditor plugin (free, from Laminar Research) for real-time dataref inspection
-- **Logs:** Check `X-Plane 12/Resources/plugins/FlyToLearn/data/modules/SASLLog.txt` and X-Plane's own `Log.txt`
+- **Logs:** Check `X-Plane 12/Resources/plugins/FlyToLearn_Basic/data/modules/SASLLog.txt` (or `FlyToLearn_Competition/`) and X-Plane's own `Log.txt`
 - **Config:** `flytolearn_config.ini` in `Custom Module/` folder — auto-generated, INI format
 
 ## Key Architectural Facts
@@ -38,10 +38,11 @@ This file provides context for Claude Code (or any Claude instance) working on t
 
 ## File Map
 
-### Core files (in repo)
-- `data/modules/main.lua` — Entry point, global settings, config load/save, component registration
-- `data/modules/Custom Module/flytolearn.lua` — State machine, scoring logic, UI window creation, flight summary logging
-- `data/modules/Custom Module/timer_library.lua` — xLua-style timer functions adapted for SASL (MIT, by Jeffory J. Beckers)
+### Core files (in repo — two independent plugin copies)
+Each plugin has its own copy under `FlyToLearn_Basic/data/modules/` and `FlyToLearn_Competition/data/modules/`:
+- `main.lua` — Entry point, global settings, config load/save, component registration
+- `Custom Module/flytolearn.lua` — State machine, scoring logic, UI window creation, flight summary logging
+- `Custom Module/timer_library.lua` — xLua-style timer functions adapted for SASL (MIT, by Jeffory J. Beckers)
 
 ### UI components (all now in repo ✅)
 Located in `data/modules/Custom Module/`:
@@ -56,8 +57,8 @@ Located in `data/modules/Custom Module/`:
 - `keyboard_handler.lua` — Keyboard input handling
 - `ui_button.lua` — Reusable button drawing component
 
-### UI assets (NOT YET in repo)
-Image assets in `Custom Module/ui_assets/` exist in the X-Plane installation but have not been copied to the repo yet. These include button state PNGs and a custom font (RobotoCondensed-Regular.ttf).
+### UI assets (in repo ✅)
+Image assets in `Custom Module/ui_assets/` — button state PNGs and RobotoCondensed-Regular.ttf font — are committed to the repo.
 
 ### Reference files (read-only, don't modify)
 - `api.lua` — SASL API annotations (109K, useful for autocomplete)
@@ -72,10 +73,11 @@ LIMBO (0) → DEPARTING (1) → INFLIGHT (2) → LANDED (3) → ENDED (4)
 
 Transitions:
 - LIMBO → DEPARTING: User clicks "Start" button
-- DEPARTING → INFLIGHT: Aircraft leaves the ground (`on_ground` → false)
-- INFLIGHT → LANDED: Aircraft touches down AND min flight time (2 min) met
+- DEPARTING → INFLIGHT: `on_ground` false **AND** groundspeed ≥ 20 m/s — records `takeoff_lat/lon`
+  - Speed threshold prevents false liftoff at terrain-complex airports (e.g. LFHU) where `onground_all` returns 0 while stationary
+- INFLIGHT → LANDED: Aircraft touches down AND min flight time (2 min) met — records `touchdown_lat/lon`
 - INFLIGHT → DEPARTING: Touch down before min flight time (resets — prevents false triggers)
-- LANDED → ENDED: Ground speed ≤ 0.01 (fully stopped)
+- LANDED → ENDED: Ground speed ≤ 0.01 (fully stopped) — records `landing_stop_lat/lon`
 - Any phase → LIMBO: User clicks "Cancel"
 
 ## Current Scoring Formula
@@ -115,43 +117,34 @@ sim/time/ground_speed_flt               -- int (should be float — known bug)
 sim/cockpit2/electrical/battery_on      -- float array, battery state
 ```
 
-## Active Work Item: Landing Quality Enhancement
+## Landing Quality Enhancement
 
-### Status: BLOCKED — waiting on runway coordinates
+### Status: IMPLEMENTED ✅ — deployed in v1.3.2 (Basic) / v1.4.2 (Competition)
 
-**Next step:** Tom needs to install DataRefEditor, position aircraft at LFLJ Runway 04 threshold and end points, and record lat/lon coordinates.
-
-### Agreed Requirements
-
-1. **G-force penalties:**
-   - Track PEAK G during entire landing roll (not just touchdown instant)
-   - \> 2.5G = 5% score penalty (hard landing)
-   - \> 3.5G = flight disqualified (crash)
-   - X-Plane native crash detection → hard landing deduction only (no double penalty)
-
-2. **Runway boundary checking (Courchevel LFLJ Rwy 04 first):**
-   - Must land AND stop within runway rectangle
-   - Off-runway = disqualified
-   - Wrong runway (22) = disqualified with message: "Not designated runway — Please land on Courchevel Rwy 04"
-
-3. **Score integration:**
-   - Percentage-based deductions: `final_score = existing_score × (1 - penalties/100)`
-   - Consistent with existing scoring architecture
-
-### Functions to Implement
+Implemented across all prior sessions. Key functions in `flytolearn.lua`:
 
 ```lua
-is_within_runway(lat, lon)          -- bool: inside Rwy 04 boundary?
+is_within_runway(lat, lon)          -- bool: inside designated runway boundary?
 calculate_landing_penalties()       -- number: percentage deduction
 check_disqualification()            -- bool: DQ conditions met?
 ```
 
-### Aviation Context for Courchevel
+### Rules (Implemented)
+
+| Condition | Result |
+|-----------|--------|
+| G-force ≤ 2.5 | Clean landing — no deduction |
+| G-force 2.5–3.5 | Hard landing — 5% penalty |
+| G-force > 3.5 | Crash — disqualified |
+| Touchdown outside runway rectangle | Off runway — disqualified |
+| Touchdown in upper half of runway (wrong-way approach) | Wrong runway — disqualified |
+
+### Aviation Context for Courchevel (Competition)
 
 - One-way operations: land ONLY on Runway 04 (uphill), takeoff ONLY on Runway 22 (downhill)
 - 18.5% gradient, 537m runway, ~6,588 ft elevation
 - Landing on Runway 22 is prohibited in real operations
-- The training route is LFHU (Altiport Huez) → LFLJ (Courchevel)
+- The competition route is LFHU (Altiport Huez) → LFLJ (Courchevel)
 
 ## Future Enhancements (Not Yet Started)
 
@@ -164,8 +157,7 @@ check_disqualification()            -- bool: DQ conditions met?
 1. `xp_gnd_speed2` declared as `globalPropertyi` but dataref is float → type mismatch warning in SASL log
 2. Typo: `flight_summary.score_wieght_time` (should be `weight`)
 3. Many globals that should be locals (`flight_phase`, `start_time`, etc.)
-4. Debug mode (`LOG_DEBUG`) left active in `main.lua` — switch to `LOG_INFO` for distribution
-5. UI image assets (`ui_assets/` folder with PNGs and font) not yet added to repo — copy from `X-Plane 12/Resources/plugins/FlyToLearn/data/modules/Custom Module/ui_assets/`
+4. `flight_start.lua` and `ftl_status.lua` discovered in X-Plane installation but not yet documented — purpose unknown
 
 ## Coding Conventions
 
@@ -179,11 +171,13 @@ check_disqualification()            -- bool: DQ conditions met?
 ## Useful Commands
 
 ```bash
-# Find all Lua files in the plugin
-find "X-Plane 12/Resources/plugins/FlyToLearn/" -name "*.lua"
+# Find all Lua files in either plugin
+find "X-Plane 12/Resources/plugins/FlyToLearn_Basic/" -name "*.lua"
+find "X-Plane 12/Resources/plugins/FlyToLearn_Competition/" -name "*.lua"
 
 # Watch SASL log for errors during development
-tail -f "X-Plane 12/Resources/plugins/FlyToLearn/data/modules/SASLLog.txt"
+tail -f "X-Plane 12/Resources/plugins/FlyToLearn_Basic/data/modules/SASLLog.txt"
+tail -f "X-Plane 12/Resources/plugins/FlyToLearn_Competition/data/modules/SASLLog.txt"
 
 # Check X-Plane log for plugin load issues
 grep -i "flytolearn\|sasl" "X-Plane 12/Log.txt"

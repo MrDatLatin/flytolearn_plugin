@@ -15,8 +15,8 @@ This repository contains two independent, self-contained plugins. Each can be in
 
 | Plugin | Version | Route | Scenery |
 |--------|---------|-------|---------|
-| **FlyToLearn Basic** | 1.3.0 | KBFI → KRNT (Seattle) | X-Plane 12 default demo scenery |
-| **FlyToLearn Competition** | 1.4.0 | LFHU → LFLJ (French Alps) | Enhanced LFLJ scenery required |
+| **FlyToLearn Basic** | 1.3.2 | KBFI → KRNT (Seattle) | X-Plane 12 default demo scenery |
+| **FlyToLearn Competition** | 1.4.2 | LFHU → LFLJ (French Alps) | Western Europe scenery required (built-in downloader) |
 
 ---
 
@@ -50,7 +50,7 @@ LIMBO → DEPARTING → INFLIGHT → LANDED → ENDED
 
 - **LIMBO** — Plugin loaded, waiting for user to start a challenge
 - **DEPARTING** — On ground, start button pressed, waiting for takeoff
-- **INFLIGHT** — Airborne, sim speed locked to 1×, tracking distance/fuel/time
+- **INFLIGHT** — Airborne (confirmed by ≥ 20 m/s groundspeed), sim speed locked to 1×, tracking distance/fuel/time
 - **LANDED** — Touched down, tracking peak G-force, calculating score
 - **ENDED** — Stopped (groundspeed ≤ 0.01), score popup displayed, summary log written
 
@@ -62,7 +62,7 @@ LIMBO → DEPARTING → INFLIGHT → LANDED → ENDED
 
 ```
 flytolearn_plugin/
-├── data/                                    # Competition source (v1.4.0, LFLJ)
+├── data/                                    # Competition source (v1.4.2, LFLJ)
 │   └── modules/
 │       ├── main.lua                         # Entry point, config, component loading
 │       └── Custom Module/
@@ -79,9 +79,9 @@ flytolearn_plugin/
 │           ├── keyboard_handler.lua         # Input handling
 │           ├── ui_button.lua                # Reusable button component
 │           └── ui_assets/                   # PNG button images & RobotoCondensed font
-├── FlyToLearn_Basic/                        # Basic plugin — v1.3.0, KBFI→KRNT
+├── FlyToLearn_Basic/                        # Basic plugin — v1.3.2, KBFI→KRNT
 │   └── data/modules/                        # Same structure as above, KRNT coords
-├── FlyToLearn_Competition/                  # Competition plugin — v1.4.0, LFHU→LFLJ
+├── FlyToLearn_Competition/                  # Competition plugin — v1.4.2, LFHU→LFLJ
 │   └── data/modules/                        # Same structure as above, LFLJ coords
 ├── docs/
 │   ├── HANDOFF.md                           # Full project context & dev history
@@ -102,8 +102,8 @@ flytolearn_plugin/
 
 For students, use the provided ZIP files. Each extracts to a folder that drops directly into `X-Plane 12/Resources/plugins/`.
 
-- `FlyToLearn_Basic_v1.3.0.zip` → `Resources/plugins/FlyToLearn_Basic/`
-- `FlyToLearn_Competition_v1.4.0.zip` → `Resources/plugins/FlyToLearn_Competition/`
+- `FlyToLearn_Basic_v1.3.2.zip` → `Resources/plugins/FlyToLearn_Basic/`
+- `FlyToLearn_Competition_v1.4.2.zip` → `Resources/plugins/FlyToLearn_Competition/`
 
 Both ZIPs include all three platform binaries (Mac/Win/Linux). `flytolearn_config.ini` is excluded so students start with clean defaults.
 
@@ -161,6 +161,16 @@ Settings are stored in `flytolearn_config.ini` inside each plugin folder and per
 
 ## Changelog
 
+### FlyToLearn Competition v1.4.2 — 2026-Mar-11
+- Fixed false "en route" status at LFHU: added 20 m/s groundspeed threshold to DEPARTING→INFLIGHT transition (prevents false liftoff at terrain-complex mountain airports where `onground_all` returns 0 while stationary)
+- Added position recording to flight log: takeoff lat/lon (at liftoff), touchdown lat/lon, landing stop lat/lon (when aircraft fully stops)
+- Updated install instructions: XDD/DVD authentication flow, Western Europe scenery via X-Plane built-in downloader
+
+### FlyToLearn Basic v1.3.2 — 2026-Mar-11
+- Fixed false "en route" status at terrain-complex airports: 20 m/s groundspeed threshold added to liftoff detection
+- Added position recording to flight log: takeoff lat/lon, touchdown lat/lon, landing stop lat/lon
+- Updated install instructions: XDD/DVD authentication flow
+
 ### FlyToLearn Competition v1.4.0 — 2026-Mar-10
 - Switched to LFLJ Courchevel production coordinates (from KRNT temp test config)
 - Wrong-runway DQ message updated to reference Rwy 04
@@ -203,7 +213,7 @@ Settings are stored in `flytolearn_config.ini` inside each plugin folder and per
 Boeing Field to Renton Municipal Airport, ~3 nm, flat terrain, default X-Plane 12 demo scenery. Introductory route for new students. Land on Runway 16 (heading south, ~160°), approaching from the north.
 
 ### Competition — LFHU → LFLJ (French Alps)
-Altiport Huez to Courchevel Altiport, ~25 nm through high Alpine terrain. Requires enhanced LFLJ scenery (free — X-Plane Gateway or x-plane.org). One-way operations enforced: **must land Runway 04 only** (uphill, heading ~044°). Landing on Runway 22 is prohibited and results in immediate disqualification — matches real-world Courchevel operations.
+Altiport Huez to Courchevel Altiport, ~25 nm through high Alpine terrain. Requires Western Europe scenery, installed via X-Plane's built-in scenery downloader (authenticate with XDD/DVD product key, select Western Europe region). One-way operations enforced: **must land Runway 04 only** (uphill, heading ~044°). Landing on Runway 22 is prohibited and results in immediate disqualification — matches real-world Courchevel operations.
 
 ---
 

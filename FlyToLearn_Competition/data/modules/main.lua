@@ -14,9 +14,9 @@ c = {} -- constants
 drefs = {}
 command_refs = {}
 
-c.curr_version = "1.4.0"
+c.curr_version = "1.4.2"
 
-settings.version = "1.4.0"
+settings.version = "1.4.2"
 settings.distance_weight = 1
 settings.payload_weight = 1
 settings.fuel_weight = 1
