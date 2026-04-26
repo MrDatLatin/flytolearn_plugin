@@ -1,0 +1,21 @@
+----------------------------------------------------------
+FlyToLearn Competition 1.4.4 — 2026-04-26
+----------------------------------------------------------
+- Fixed: "Landed on Wrong Runway" disqualification when touchdown
+  was actually inside the safe zone. Touchdown position is now
+  recorded at the actual moment of wheel contact, not at the
+  point where the plane slowed to ~45 kts.
+- Fixed: False "Enroute" banner during takeoff roll at ~45 kts.
+  Phase transition now uses gear-height (sim/flightmodel2/gear/y_agl)
+  instead of the unreliable onground_all weight-on-wheels sensor.
+- Added: Per-gear height pre-capture using vh_ind_fpm2
+  (instantaneous vertical speed) for accurate landing scoring.
+
+----------------------------------------------------------
+FlyToLearn Competition 1.4.2
+----------------------------------------------------------
+- Added landing quality scoring: G-force penalties and disqualification
+- Added runway zone check (touchdown_lat/lon vs safe landing zone)
+- Added wrong-runway detection (upper half of runway = wrong direction)
+- Added takeoff position recording (takeoff_lat/lon)
+- Added landing stop position recording (landing_stop_lat/lon)

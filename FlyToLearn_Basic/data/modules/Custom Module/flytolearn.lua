@@ -43,10 +43,15 @@ landing_stop_lat, landing_stop_lon = 0, 0  -- position where aircraft came to a 
 landing_dq = false
 landing_dq_reason = ""
 landing_penalty_pct = 0
+pre_touchdown_lat, pre_touchdown_lon = 0, 0
+pre_touchdown_recorded = false
 
--- Takeoff detection: minimum ground speed (m/s) before liftoff is confirmed.
--- Prevents false "airborne" reading at airports with terrain mesh issues (e.g. LFHU).
-local TAKEOFF_MIN_SPEED_MS = 20  -- ~39 knots
+FTL_VERSION = "1.3.3"
+
+-- Gear height threshold (meters) to confirm airborne on takeoff and touchdown on landing.
+-- Uses sim/flightmodel2/gear/y_agl per-wheel; replaces onground_all which is unreliable
+-- at speed due to aerodynamic lift unloading the weight-on-wheels sensors (~45 kts).
+local GROUND_THRESHOLD_M = 0.5   -- ~1.6 ft
 
 
 
@@ -86,10 +91,18 @@ xp_gnd_speed1 = globalPropertyi ("sim/time/ground_speed")
 xp_gnd_speed2 = globalPropertyf ("sim/time/ground_speed_flt")
 xp_gforce = globalPropertyf ("sim/flightmodel/forces/g_nrml")
 xp_vs_fpm = globalPropertyf ("sim/flightmodel/position/vh_ind_fpm")
+xp_vs_fpm2    = globalPropertyf  ("sim/flightmodel/position/vh_ind_fpm2")  -- instantaneous VS, no instrument lag
+xp_y_agl_gear0 = globalPropertyfae("sim/flightmodel2/gear/y_agl", 0)
+xp_y_agl_gear1 = globalPropertyfae("sim/flightmodel2/gear/y_agl", 1)
+xp_y_agl_gear2 = globalPropertyfae("sim/flightmodel2/gear/y_agl", 2)
 
 
 -- xp_sim_speed_cmd = findCommand ("sim/operation/flightmodel_speed_change")
 -- xp_sim_groundspeed_cmd = findCommand ("sim/operation/ground_speed_change")
+
+function min_gear_y_agl()
+    return math.min(get(xp_y_agl_gear0), get(xp_y_agl_gear1), get(xp_y_agl_gear2))
+end
 
 --- function library
 function findAirport(lat, long)
@@ -215,6 +228,8 @@ function settings.ftl_logo.doMouseUp (button, parentX, parentY, button_name, cid
         takeoff_lat, takeoff_lon = 0, 0
         touchdown_lat, touchdown_lon = 0, 0
         landing_stop_lat, landing_stop_lon = 0, 0
+        pre_touchdown_lat, pre_touchdown_lon = 0, 0
+        pre_touchdown_recorded = false
         landing_dq = false
         landing_dq_reason = ""
         landing_penalty_pct = 0
@@ -575,6 +590,12 @@ function update ()
     local xptime, xpfuel, xpdist, xpspeed = get(xp_flight_time), get(xp_fuel_weight), get(xp_dist), get(xp_ground_speed)
     if flight_phase == FTL_PHASE_INFLIGHT then
         force_sim_speed_to_one ()
+        -- Pre-capture touchdown position: while descending and any wheel within 0.5m of ground
+        if min_gear_y_agl() < GROUND_THRESHOLD_M and get(xp_vs_fpm2) < 0 then
+            pre_touchdown_lat = get(xp_lat)
+            pre_touchdown_lon = get(xp_lon)
+            pre_touchdown_recorded = true
+        end
     end
     if flight_phase == FTL_PHASE_LANDED then
         local current_g = get(xp_gforce)
@@ -582,8 +603,8 @@ function update ()
     end
     if flight_phase == FTL_PHASE_DEPARTING then
         force_sim_speed_to_one ()
-        -- Require minimum speed to confirm actual liftoff (prevents false trigger at terrain-complex airports)
-        if not on_ground and xpspeed >= TAKEOFF_MIN_SPEED_MS then
+        -- Confirm liftoff using gear height — more reliable than onground_all at speed
+        if min_gear_y_agl() > GROUND_THRESHOLD_M then
             flight_phase = FTL_PHASE_INFLIGHT
             takeoff_lat = get(xp_lat)   -- record liftoff position
             takeoff_lon = get(xp_lon)
@@ -592,11 +613,16 @@ function update ()
             start_dist = xpdist -- in meters
             payload_wt = get(xp_total_weight) - get(xp_empty_weight) - get(xp_fuel_weight) -- in kgs
         end
-    elseif flight_phase == FTL_PHASE_INFLIGHT and on_ground then
+    elseif flight_phase == FTL_PHASE_INFLIGHT and min_gear_y_agl() < GROUND_THRESHOLD_M then
         if xptime - start_time >= (settings.min_flight_length * 60) then -- JJB 2024-03-23: added min flight length
             flight_phase = FTL_PHASE_LANDED
-            touchdown_lat = get(xp_lat)
-            touchdown_lon = get(xp_lon)
+            if pre_touchdown_recorded then
+                touchdown_lat = pre_touchdown_lat
+                touchdown_lon = pre_touchdown_lon
+            else
+                touchdown_lat = get(xp_lat)
+                touchdown_lon = get(xp_lon)
+            end
             peak_gforce   = get(xp_gforce)
             end_time = xptime - start_time
             end_fuel = start_fuel - xpfuel

@@ -7,7 +7,7 @@ This file provides context for Claude Code (or any Claude instance) working on t
 - **Name:** FlyToLearn Aviation Challenge
 - **Type:** SASL 3.16.4 plugin for X-Plane 12
 - **Language:** Lua (LuaJIT / Lua 5.1 compatible)
-- **Versions:** FlyToLearn Basic 1.3.2 / FlyToLearn Competition 1.4.2
+- **Versions:** FlyToLearn Basic 1.3.3 / FlyToLearn Competition 1.4.4
 - **Author:** Tom
 - **License:** MIT
 - **Purpose:** Educational flight scoring system for student pilot training
@@ -73,10 +73,11 @@ LIMBO (0) → DEPARTING (1) → INFLIGHT (2) → LANDED (3) → ENDED (4)
 
 Transitions:
 - LIMBO → DEPARTING: User clicks "Start" button
-- DEPARTING → INFLIGHT: `on_ground` false **AND** groundspeed ≥ 20 m/s — records `takeoff_lat/lon`
-  - Speed threshold prevents false liftoff at terrain-complex airports (e.g. LFHU) where `onground_all` returns 0 while stationary
-- INFLIGHT → LANDED: Aircraft touches down AND min flight time (2 min) met — records `touchdown_lat/lon`
-- INFLIGHT → DEPARTING: Touch down before min flight time (resets — prevents false triggers)
+- DEPARTING → INFLIGHT: `min_gear_y_agl() > 0.5 m` — any wheel ≥ 0.5 m above ground confirms airborne — records `takeoff_lat/lon`
+  - Uses `sim/flightmodel2/gear/y_agl` per-gear height. Replaced `onground_all` + speed guard which was unreliable at ~45 kts due to aerodynamic lift unloading weight-on-wheels sensors.
+- INFLIGHT → LANDED: `min_gear_y_agl() < 0.5 m` AND min flight time (2 min) met — records `touchdown_lat/lon` from pre-captured position
+  - Pre-capture: while INFLIGHT, continuously saves lat/lon when `gear_y_agl < 0.5 m` AND `vh_ind_fpm2 < 0` (descending). Ensures touchdown position is the actual wheel-contact point, not a downstream position at 45 kts.
+- INFLIGHT → DEPARTING: Touch down before min flight time (resets — prevents false triggers / bounce-on-takeoff)
 - LANDED → ENDED: Ground speed ≤ 0.01 (fully stopped) — records `landing_stop_lat/lon`
 - Any phase → LIMBO: User clicks "Cancel"
 
@@ -103,9 +104,11 @@ sim/flightmodel/weight/m_total           -- float, total weight kg
 sim/flightmodel/weight/m_fuel_total      -- float, fuel weight kg
 sim/aircraft/weight/acf_m_empty          -- float, empty weight kg
 
--- Performance (captured but NOT yet used in scoring)
+-- Performance
 sim/flightmodel/forces/g_nrml           -- float, normal G-force
-sim/flightmodel/position/vh_ind_fpm     -- float, vertical speed fpm
+sim/flightmodel/position/vh_ind_fpm     -- float, vertical speed fpm (instrument-lagged, used in score log)
+sim/flightmodel/position/vh_ind_fpm2    -- float, instantaneous vertical speed fpm (no lag, used in touchdown pre-capture)
+sim/flightmodel2/gear/y_agl             -- float array [0,1,2], per-gear height above ground in meters (primary ground detection)
 
 -- Time & sim control
 sim/time/total_flight_time_sec          -- float, flight time
@@ -141,9 +144,9 @@ check_disqualification()            -- bool: DQ conditions met?
 
 ### Aviation Context for Courchevel (Competition)
 
-- One-way operations: land ONLY on Runway 04 (uphill), takeoff ONLY on Runway 22 (downhill)
+- One-way operations: land ONLY on Runway 22 (uphill), takeoff ONLY on Runway 04 (downhill)
 - 18.5% gradient, 537m runway, ~6,588 ft elevation
-- Landing on Runway 22 is prohibited in real operations
+- Landing on Runway 04 is prohibited in real operations
 - The competition route is LFHU (Altiport Huez) → LFLJ (Courchevel)
 
 ## Future Enhancements (Not Yet Started)
@@ -151,6 +154,18 @@ check_disqualification()            -- bool: DQ conditions met?
 - Extend runway detection to work with any runway (not just hardcoded Courchevel)
 - Landing quality grades: Butter / Soft / Firm / Hard / Crash
 - Bounce detection (air→ground→air cycles within 10-15 second window)
+
+## Recent Changes
+
+### 2026-04-26 — v1.3.3 / v1.4.3 — Touchdown detection rewrite
+
+Replaced `sim/flightmodel/failures/onground_all` (weight-on-wheels) with `sim/flightmodel2/gear/y_agl` (per-wheel height) for both takeoff and landing phase transitions.
+
+**Root cause:** `onground_all` is unreliable at high speed because aerodynamic lift unloads the gear sensors. For FlyToLearn aircraft, it was firing ~25 seconds late on landing (~45 kts), causing "Landed on Wrong Runway" disqualifications when the recorded `touchdown_lat/lon` was hundreds of feet past the actual touchdown point. It also caused false INFLIGHT transitions during takeoff roll at ~45 kts.
+
+**Fix:** `GROUND_THRESHOLD_M = 0.5` (1.6 ft) gear-height threshold for both directions. Landing pre-capture uses `xp_vs_fpm2` (instantaneous, no instrument lag) to filter for descending frames only.
+
+---
 
 ## Known Bugs & Tech Debt
 
