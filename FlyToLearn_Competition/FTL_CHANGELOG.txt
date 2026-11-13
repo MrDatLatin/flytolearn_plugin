@@ -1,15 +1,15 @@
 ----------------------------------------------------------
-FlyToLearn Competition 1.4.4 — 2026-04-26
+FlyToLearn Competition 1.4.3 — 2026-11-12
 ----------------------------------------------------------
-- Fixed: "Landed on Wrong Runway" disqualification when touchdown
-  was actually inside the safe zone. Touchdown position is now
-  recorded at the actual moment of wheel contact, not at the
-  point where the plane slowed to ~45 kts.
-- Fixed: False "Enroute" banner during takeoff roll at ~45 kts.
-  Phase transition now uses gear-height (sim/flightmodel2/gear/y_agl)
-  instead of the unreliable onground_all weight-on-wheels sensor.
-- Added: Per-gear height pre-capture using vh_ind_fpm2
-  (instantaneous vertical speed) for accurate landing scoring.
+- Added: Takeoff minimum-speed gate (TAKEOFF_MIN_SPEED_MS = 20 m/s,
+  ~39 knots). DEPARTING -> INFLIGHT now requires both onground_all = 0
+  AND ground speed >= 20 m/s. Prevents false liftoff triggers at
+  terrain-complex airports (e.g. LFHU) where the aircraft can momentarily
+  read "not on ground" while still rolling.
+- Reverted: The v1.4.4 gear/y_agl detection attempt (sim/flightmodel2/gear/y_agl
+  does not exist in this X-Plane build). Returns to onground_all-based
+  landing detection.
+- Note: This is the build shared with Gamma.
 
 ----------------------------------------------------------
 FlyToLearn Competition 1.4.2
