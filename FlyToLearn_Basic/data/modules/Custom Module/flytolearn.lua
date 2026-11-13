@@ -45,13 +45,17 @@ landing_dq_reason = ""
 landing_penalty_pct = 0
 pre_touchdown_lat, pre_touchdown_lon = 0, 0
 pre_touchdown_recorded = false
+start_y_agl = 0  -- on-ground body height (meters) captured at Start click; baseline for AGL deltas
 
-FTL_VERSION = "1.3.3"
+FTL_VERSION = "1.3.4"
 
--- Gear height threshold (meters) to confirm airborne on takeoff and touchdown on landing.
--- Uses sim/flightmodel2/gear/y_agl per-wheel; replaces onground_all which is unreliable
--- at speed due to aerodynamic lift unloading the weight-on-wheels sensors (~45 kts).
-local GROUND_THRESHOLD_M = 0.5   -- ~1.6 ft
+-- sim/flightmodel/position/y_agl gives aircraft body height above terrain.
+-- start_y_agl captures this height at Start click (varies by aircraft: ~1.5m Cessna, ~3m airliner).
+-- All thresholds are deltas above start_y_agl, so they're aircraft-independent.
+-- Geometric measurement, not weight-on-wheels — immune to aerodynamic-unloading bug at ~45 kts.
+local LIFTOFF_DELTA_M     = 1.0  -- body 1m above on-ground = solidly airborne
+local PRE_CAPTURE_DELTA_M = 0.5  -- body within 0.5m of on-ground = wheels close, start recording
+local TOUCHDOWN_DELTA_M   = 0.2  -- body within 0.2m of on-ground = wheel contact, fire transition
 
 
 
@@ -92,17 +96,11 @@ xp_gnd_speed2 = globalPropertyf ("sim/time/ground_speed_flt")
 xp_gforce = globalPropertyf ("sim/flightmodel/forces/g_nrml")
 xp_vs_fpm = globalPropertyf ("sim/flightmodel/position/vh_ind_fpm")
 xp_vs_fpm2    = globalPropertyf  ("sim/flightmodel/position/vh_ind_fpm2")  -- instantaneous VS, no instrument lag
-xp_y_agl_gear0 = globalPropertyfae("sim/flightmodel2/gear/y_agl", 0)
-xp_y_agl_gear1 = globalPropertyfae("sim/flightmodel2/gear/y_agl", 1)
-xp_y_agl_gear2 = globalPropertyfae("sim/flightmodel2/gear/y_agl", 2)
+xp_agl        = globalPropertyf  ("sim/flightmodel/position/y_agl")        -- aircraft body height AGL (meters)
 
 
 -- xp_sim_speed_cmd = findCommand ("sim/operation/flightmodel_speed_change")
 -- xp_sim_groundspeed_cmd = findCommand ("sim/operation/ground_speed_change")
-
-function min_gear_y_agl()
-    return math.min(get(xp_y_agl_gear0), get(xp_y_agl_gear1), get(xp_y_agl_gear2))
-end
 
 --- function library
 function findAirport(lat, long)
@@ -230,6 +228,7 @@ function settings.ftl_logo.doMouseUp (button, parentX, parentY, button_name, cid
         landing_stop_lat, landing_stop_lon = 0, 0
         pre_touchdown_lat, pre_touchdown_lon = 0, 0
         pre_touchdown_recorded = false
+        start_y_agl = get(xp_agl)  -- baseline body AGL while sitting on ground
         landing_dq = false
         landing_dq_reason = ""
         landing_penalty_pct = 0
@@ -590,8 +589,8 @@ function update ()
     local xptime, xpfuel, xpdist, xpspeed = get(xp_flight_time), get(xp_fuel_weight), get(xp_dist), get(xp_ground_speed)
     if flight_phase == FTL_PHASE_INFLIGHT then
         force_sim_speed_to_one ()
-        -- Pre-capture touchdown position: while descending and any wheel within 0.5m of ground
-        if min_gear_y_agl() < GROUND_THRESHOLD_M and get(xp_vs_fpm2) < 0 then
+        -- Pre-capture touchdown position: while descending and body within PRE_CAPTURE_DELTA_M of on-ground
+        if get(xp_agl) < start_y_agl + PRE_CAPTURE_DELTA_M and get(xp_vs_fpm2) < 0 then
             pre_touchdown_lat = get(xp_lat)
             pre_touchdown_lon = get(xp_lon)
             pre_touchdown_recorded = true
@@ -603,8 +602,8 @@ function update ()
     end
     if flight_phase == FTL_PHASE_DEPARTING then
         force_sim_speed_to_one ()
-        -- Confirm liftoff using gear height — more reliable than onground_all at speed
-        if min_gear_y_agl() > GROUND_THRESHOLD_M then
+        -- Confirm liftoff: body LIFTOFF_DELTA_M above on-ground baseline = solidly airborne
+        if get(xp_agl) > start_y_agl + LIFTOFF_DELTA_M then
             flight_phase = FTL_PHASE_INFLIGHT
             takeoff_lat = get(xp_lat)   -- record liftoff position
             takeoff_lon = get(xp_lon)
@@ -613,7 +612,7 @@ function update ()
             start_dist = xpdist -- in meters
             payload_wt = get(xp_total_weight) - get(xp_empty_weight) - get(xp_fuel_weight) -- in kgs
         end
-    elseif flight_phase == FTL_PHASE_INFLIGHT and min_gear_y_agl() < GROUND_THRESHOLD_M then
+    elseif flight_phase == FTL_PHASE_INFLIGHT and get(xp_agl) < start_y_agl + TOUCHDOWN_DELTA_M then
         if xptime - start_time >= (settings.min_flight_length * 60) then -- JJB 2024-03-23: added min flight length
             flight_phase = FTL_PHASE_LANDED
             if pre_touchdown_recorded then

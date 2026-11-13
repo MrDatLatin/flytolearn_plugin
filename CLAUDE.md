@@ -7,7 +7,7 @@ This file provides context for Claude Code (or any Claude instance) working on t
 - **Name:** FlyToLearn Aviation Challenge
 - **Type:** SASL 3.16.4 plugin for X-Plane 12
 - **Language:** Lua (LuaJIT / Lua 5.1 compatible)
-- **Versions:** FlyToLearn Basic 1.3.3 / FlyToLearn Competition 1.4.4
+- **Versions:** FlyToLearn Basic 1.3.4 / FlyToLearn Competition 1.4.4
 - **Author:** Tom
 - **License:** MIT
 - **Purpose:** Educational flight scoring system for student pilot training
@@ -71,15 +71,17 @@ Image assets in `Custom Module/ui_assets/` — button state PNGs and RobotoConde
 LIMBO (0) → DEPARTING (1) → INFLIGHT (2) → LANDED (3) → ENDED (4)
 ```
 
-Transitions:
-- LIMBO → DEPARTING: User clicks "Start" button
-- DEPARTING → INFLIGHT: `min_gear_y_agl() > 0.5 m` — any wheel ≥ 0.5 m above ground confirms airborne — records `takeoff_lat/lon`
-  - Uses `sim/flightmodel2/gear/y_agl` per-gear height. Replaced `onground_all` + speed guard which was unreliable at ~45 kts due to aerodynamic lift unloading weight-on-wheels sensors.
-- INFLIGHT → LANDED: `min_gear_y_agl() < 0.5 m` AND min flight time (2 min) met — records `touchdown_lat/lon` from pre-captured position
-  - Pre-capture: while INFLIGHT, continuously saves lat/lon when `gear_y_agl < 0.5 m` AND `vh_ind_fpm2 < 0` (descending). Ensures touchdown position is the actual wheel-contact point, not a downstream position at 45 kts.
+Transitions (Basic v1.3.4 — body-AGL detection):
+- LIMBO → DEPARTING: User clicks "Start" button. Captures `start_y_agl = get(xp_agl)` as the on-ground baseline body height (varies by aircraft: ~1.5m Cessna, ~3m airliner).
+- DEPARTING → INFLIGHT: `xp_agl > start_y_agl + LIFTOFF_DELTA_M` (1.0m above on-ground baseline) — confirms solidly airborne — records `takeoff_lat/lon`
+  - Uses `sim/flightmodel/position/y_agl` (aircraft body AGL). Geometric measurement immune to aerodynamic-unloading bug that plagued `onground_all`.
+- INFLIGHT → LANDED: `xp_agl < start_y_agl + TOUCHDOWN_DELTA_M` (0.2m above on-ground baseline ≈ wheel contact) AND min flight time (2 min) met — records `touchdown_lat/lon` from pre-captured position
+  - Pre-capture: while INFLIGHT, continuously saves lat/lon when `xp_agl < start_y_agl + PRE_CAPTURE_DELTA_M` (0.5m) AND `vh_ind_fpm2 < 0` (descending).
 - INFLIGHT → DEPARTING: Touch down before min flight time (resets — prevents false triggers / bounce-on-takeoff)
 - LANDED → ENDED: Ground speed ≤ 0.01 (fully stopped) — records `landing_stop_lat/lon`
 - Any phase → LIMBO: User clicks "Cancel"
+
+**Note:** Competition v1.4.4 still uses the broken v1.3.3 design with `sim/flightmodel2/gear/y_agl` (a non-existent dataref) — state machine freezes in DEPARTING. Mirror Basic v1.3.4 changes into Competition once Basic is verified across platforms.
 
 ## Current Scoring Formula
 
@@ -108,7 +110,10 @@ sim/aircraft/weight/acf_m_empty          -- float, empty weight kg
 sim/flightmodel/forces/g_nrml           -- float, normal G-force
 sim/flightmodel/position/vh_ind_fpm     -- float, vertical speed fpm (instrument-lagged, used in score log)
 sim/flightmodel/position/vh_ind_fpm2    -- float, instantaneous vertical speed fpm (no lag, used in touchdown pre-capture)
-sim/flightmodel2/gear/y_agl             -- float array [0,1,2], per-gear height above ground in meters (primary ground detection)
+sim/flightmodel/position/y_agl          -- float, aircraft body height above ground in meters (primary ground detection in Basic v1.3.4)
+-- DO NOT use: sim/flightmodel2/gear/y_agl — does NOT exist (verified via Log.txt and master DataRefs.txt). The CLAUDE.md and v1.3.3 code referenced it incorrectly.
+-- Fallback candidate: sim/flightmodel2/position/y_agl (alternate body AGL, also in master DataRefs.txt)
+-- Verify dataref existence in: /Users/tom.dubick/X-Plane 12/Resources/plugins/DataRefs.txt
 
 -- Time & sim control
 sim/time/total_flight_time_sec          -- float, flight time
@@ -157,22 +162,38 @@ check_disqualification()            -- bool: DQ conditions met?
 
 ## Recent Changes
 
-### 2026-04-26 — v1.3.3 / v1.4.3 — Touchdown detection rewrite
+### 2026-04-26 — Basic v1.3.4 — Body-AGL detection (replaces broken gear/y_agl)
 
-Replaced `sim/flightmodel/failures/onground_all` (weight-on-wheels) with `sim/flightmodel2/gear/y_agl` (per-wheel height) for both takeoff and landing phase transitions.
+Replaced the v1.3.3 gear-based detection (which used `sim/flightmodel2/gear/y_agl` — a dataref that does NOT exist in this X-Plane install, confirmed via Log.txt warning `findDataRef ... not found` and master DataRefs.txt search).
 
-**Root cause:** `onground_all` is unreliable at high speed because aerodynamic lift unloads the gear sensors. For FlyToLearn aircraft, it was firing ~25 seconds late on landing (~45 kts), causing "Landed on Wrong Runway" disqualifications when the recorded `touchdown_lat/lon` was hundreds of feet past the actual touchdown point. It also caused false INFLIGHT transitions during takeoff roll at ~45 kts.
+**Root cause:** The v1.3.3 dataref name was wrong/invented. State machine froze in DEPARTING because `min_gear_y_agl()` errored every frame on `math.min(nil, nil, nil)`.
 
-**Fix:** `GROUND_THRESHOLD_M = 0.5` (1.6 ft) gear-height threshold for both directions. Landing pre-capture uses `xp_vs_fpm2` (instantaneous, no instrument lag) to filter for descending frames only.
+**Fix:** Use `sim/flightmodel/position/y_agl` (aircraft body AGL — verified existing). Capture on-ground baseline `start_y_agl = get(xp_agl)` at Start click, then use three deltas:
+- `LIFTOFF_DELTA_M = 1.0` — confirms INFLIGHT when body 1m above on-ground baseline
+- `PRE_CAPTURE_DELTA_M = 0.5` — pre-capture touchdown lat/lon when body within 0.5m of baseline AND descending
+- `TOUCHDOWN_DELTA_M = 0.2` — fires INFLIGHT → LANDED when body within 0.2m of baseline (~wheel contact)
+
+Auto-adapts to any aircraft regardless of body height. Geometric measurement is immune to the aerodynamic-unloading bug that plagued `onground_all`. Both Bug 1 (false liftoff at 45 kts) and Bug 2 (late touchdown at 45 kts) remain prevented.
+
+**Verified:** Working on Tom's Mac. Windows compatibility unknown — pending school PC test.
+
+**Outstanding:** Competition v1.4.4 still has the v1.3.3 broken code. Mirror once Basic is cross-platform verified.
+
+### 2026-04-26 — v1.3.3 / v1.4.4 — Touchdown detection rewrite (BROKEN — see v1.3.4)
+
+Attempted to use `sim/flightmodel2/gear/y_agl` for per-wheel height detection. The dataref doesn't exist; this version freezes the state machine in DEPARTING. Use v1.3.4 (Basic) instead.
 
 ---
 
 ## Known Bugs & Tech Debt
 
-1. `xp_gnd_speed2` declared as `globalPropertyi` but dataref is float → type mismatch warning in SASL log
-2. Typo: `flight_summary.score_wieght_time` (should be `weight`)
-3. Many globals that should be locals (`flight_phase`, `start_time`, etc.)
-4. `flight_start.lua` and `ftl_status.lua` discovered in X-Plane installation but not yet documented — purpose unknown
+1. **Competition v1.4.4 is broken** — uses non-existent `sim/flightmodel2/gear/y_agl`. State machine freezes in DEPARTING. Needs v1.3.4-style body-AGL fix mirrored over.
+2. **`configuration.ini` is required but NOT in git repo.** SASL plugin won't load without `<plugin_root>/data/modules/configuration/configuration.ini`. Tom manually placed it for the installed Basic plugin. Any fresh `git clone` install will fail until this is added. Should be committed to repo (or generated on install).
+3. `xp_gnd_speed2` declared as `globalPropertyf` but referenced inconsistently → type mismatch warning in SASL log
+4. Typo: `flight_summary.score_wieght_time` (should be `weight`)
+5. Many globals that should be locals (`flight_phase`, `start_time`, etc.)
+6. `flight_start.lua` and `ftl_status.lua` discovered in X-Plane installation but not yet documented — purpose unknown
+7. Per-frame debug `print()` calls in `ftl_status.lua` and `ftl_logo.lua` — log spam
 
 ## Coding Conventions
 

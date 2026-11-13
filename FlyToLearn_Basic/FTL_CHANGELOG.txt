@@ -1,4 +1,18 @@
 ----------------------------------------------------------
+FlyToLearn Basic 1.3.4 — 2026-04-26
+----------------------------------------------------------
+- Fixed: Plugin state machine froze in "Waiting to depart"
+  because sim/flightmodel2/gear/y_agl does not exist in this
+  X-Plane build. Switched to sim/flightmodel/position/y_agl
+  (aircraft body AGL) and capture an on-ground baseline at
+  Start click, so detection auto-adapts to any aircraft.
+- Liftoff threshold: body must rise 1.0m above on-ground
+  baseline to confirm INFLIGHT.
+- Touchdown pre-capture window: body within 0.5m of baseline
+  while descending.
+- LANDED transition: body within 0.2m of baseline (~wheel contact).
+
+----------------------------------------------------------
 FlyToLearn Basic 1.3.3 — 2026-04-26
 ----------------------------------------------------------
 - Fixed: "Landed on Wrong Runway" disqualification when touchdown
